@@ -199,6 +199,14 @@ ADD COLUMN eligibility_reviewed_by BIGINT NULL,
 ADD COLUMN eligibility_reviewed_at DATETIME NULL,
 ADD CONSTRAINT fk_donor_eligibility_reviewer
     FOREIGN KEY (eligibility_reviewed_by) REFERENCES users(id);
+    
+SHOW COLUMNS FROM donor_matches LIKE 'admin_approval';
+ALTER TABLE donor_matches
+MODIFY COLUMN admin_approval
+ENUM('PENDING', 'APPROVED', 'REJECTED', 'REVOKED')
+NOT NULL DEFAULT 'PENDING';
+
+
 
 SHOW TABLES;
 
@@ -209,3 +217,5 @@ WHERE email = 'talhairfanarain7861@gmail.com';
 select * from users;
 select * from donor_profiles;
 select * from blood_requests;
+select * from donor_matches;
+select * from notifications;

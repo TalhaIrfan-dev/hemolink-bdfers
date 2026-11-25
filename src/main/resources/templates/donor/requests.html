@@ -32,23 +32,13 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-right: 7px;
+            margin: 5px 7px 5px 0;
         }
 
-        .accept {
-            background: #16834a;
-            color: white;
-        }
-
-        .decline {
-            background: #b42332;
-            color: white;
-        }
-
-        .consent {
-            background: #175cd3;
-            color: white;
-        }
+        .accept { background: #16834a; color: white; }
+        .decline { background: #b42332; color: white; }
+        .consent { background: #175cd3; color: white; }
+        .report { background: #087e8b; color: white; }
 
         .message {
             padding: 12px;
@@ -66,6 +56,32 @@
             background: #fff4e5;
             padding: 12px;
             border-radius: 5px;
+            margin-top: 12px;
+        }
+
+        .report-section {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .form-group {
+            margin: 12px 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            max-width: 350px;
+            padding: 9px;
+            box-sizing: border-box;
         }
 
         .empty {
@@ -107,8 +123,7 @@
 
         <p>
             <strong>Blood Group:</strong>
-            <span th:text="${#strings.replace(
-                match.bloodRequest.bloodGroup.name(), '_', ' ')}"></span>
+            <span th:text="${match.bloodRequest.bloodGroup}"></span>
         </p>
 
         <p>
@@ -149,7 +164,11 @@
             <span th:text="${match.donorResponse}"></span>
         </p>
 
-        <div th:if="${match.donorResponse.name() == 'PENDING'}">
+        <!-- Accept / Decline -->
+        <div th:if="${match.donorResponse.name() == 'PENDING'
+        and match.bloodRequest.adminStatus.name() != 'CLOSED'
+        and match.bloodRequest.adminStatus.name() != 'REJECTED'
+        and match.bloodRequest.adminStatus.name() != 'FULFILLED'}">
 
             <form th:action="@{/donor/requests/{id}/respond(id=${match.id})}"
                   method="post"
@@ -172,9 +191,9 @@
                     Decline Request
                 </button>
             </form>
-
         </div>
 
+        <!-- Contact-sharing consent -->
         <div th:if="${match.donorResponse.name() == 'ACCEPTED'}">
 
             <p>
@@ -182,35 +201,102 @@
                 <span th:text="${match.donorConsent ? 'Given' : 'Not given'}"></span>
             </p>
 
-            <div th:if="${!match.donorConsent}">
-                <div class="notice">
-                    <p>
-                        By selecting the button below, you explicitly
-                        consent to sharing your registered contact number
-                        with the requester, subject to administrator approval.
-                    </p>
+            <div th:if="${!match.donorConsent
+                 and match.bloodRequest.adminStatus.name() != 'CLOSED'
+                 and match.bloodRequest.adminStatus.name() != 'REJECTED'
+                 and match.bloodRequest.adminStatus.name() != 'FULFILLED'}"
+                 class="notice">
 
-                    <form th:action="@{/donor/requests/{id}/consent(id=${match.id})}"
-                          method="post">
+                <p>
+                    By selecting the button below, you explicitly consent
+                    to sharing your registered contact number with the
+                    requester, subject to administrator approval.
+                </p>
 
-                        <button class="button consent" type="submit">
-                            I Consent to Share My Contact
-                        </button>
-                    </form>
-                </div>
+                <form th:action="@{/donor/requests/{id}/consent(id=${match.id})}"
+                      method="post">
+
+                    <button class="button consent" type="submit">
+                        I Consent to Share My Contact
+                    </button>
+                </form>
             </div>
 
             <p th:if="${match.donorConsent}">
                 Your consent has been recorded. Contact information
                 remains hidden until an administrator approves disclosure.
             </p>
-
         </div>
 
+        <!-- Donation outcome reporting -->
+        <div class="report-section"
+        th:if="${match.donorResponse.name() == 'ACCEPTED'
+            and match.bloodRequest.adminStatus.name() != 'CLOSED'
+            and match.bloodRequest.adminStatus.name() != 'REJECTED'
+            and match.bloodRequest.adminStatus.name() != 'FULFILLED'
+            and !reportedMatchIds.contains(match.id)}">
+
+            <h4>Report Donation Outcome</h4>
+
+            <p>
+                After responding to the request, report whether the
+                donation actually took place. Accepting a request does
+                not automatically mean that a donation was completed.
+            </p>
+
+            <form th:action="@{/donor/requests/{id}/donation-report(id=${match.id})}"
+                  method="post"
+                  class="donation-report-form">
+
+                <div class="form-group">
+                    <label>Donation Outcome</label>
+
+                    <select name="outcome"
+                            class="outcome-select"
+                            required>
+
+                        <option value="">Select outcome</option>
+                        <option value="COMPLETED">Donation Completed</option>
+                        <option value="NOT_OCCURRED">Donation Did Not Occur</option>
+                    </select>
+                </div>
+
+                <div class="completed-fields" style="display:none;">
+
+                    <div class="form-group">
+                        <label>Units Donated</label>
+                        <input type="number"
+                               name="unitsDonated"
+                               min="1"
+                               step="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Donation Date</label>
+                        <input type="date"
+                               name="donationDate"
+                               th:attr="max=${today}">
+                    </div>
+                </div>
+
+                <button type="submit" class="button report">
+                    Submit Donation Report
+                </button>
+            </form>
+        </div>
+
+        <!-- Already reported -->
+        <p class="notice"
+           th:if="${reportedMatchIds.contains(match.id)}">
+            You have already submitted the donation outcome for this request.
+        </p>
+
+        <!-- Declined -->
         <div th:if="${match.donorResponse.name() == 'DECLINED'}">
             <p>You declined this request.</p>
         </div>
 
+        <!-- Inactive request -->
         <div class="notice"
              th:if="${match.bloodRequest.adminStatus.name() == 'CLOSED'
                   or match.bloodRequest.adminStatus.name() == 'REJECTED'
@@ -231,5 +317,32 @@
     <p><a th:href="@{/dashboard}">Back to Dashboard</a></p>
 
 </div>
+
+<script>
+    document.querySelectorAll(".donation-report-form").forEach(form => {
+        const outcomeSelect = form.querySelector(".outcome-select");
+        const completedFields = form.querySelector(".completed-fields");
+        const unitsInput = form.querySelector('input[name="unitsDonated"]');
+        const dateInput = form.querySelector('input[name="donationDate"]');
+
+        function updateFields() {
+            const completed = outcomeSelect.value === "COMPLETED";
+
+            completedFields.style.display = completed ? "block" : "none";
+
+            unitsInput.required = completed;
+            dateInput.required = completed;
+
+            if (!completed) {
+                unitsInput.value = "";
+                dateInput.value = "";
+            }
+        }
+
+        outcomeSelect.addEventListener("change", updateFields);
+        updateFields();
+    });
+</script>
+
 </body>
 </html>
