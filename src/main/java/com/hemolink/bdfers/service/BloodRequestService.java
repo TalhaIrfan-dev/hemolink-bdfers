@@ -1,4 +1,3 @@
-
 package com.hemolink.bdfers.service;
 
 import com.hemolink.bdfers.dto.request.BloodRequestRequest;
@@ -88,5 +87,8 @@ public class BloodRequestService {
         request.setMatchingStatus(MatchingStatus.NOT_STARTED);
 
         bloodRequestRepository.save(request);
+
+        // Immediately revoke previously approved donor contact disclosures.
+        matchingService.revokeApprovedContacts(requestId);
     }
 }

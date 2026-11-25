@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HemoLink | Contact Disclosure Review</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 18px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        button {
+            padding: 9px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .approve {
+            background: #16834a;
+            color: white;
+        }
+
+        .reject {
+            background: #b42332;
+            color: white;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>HemoLink</h1>
+    <h2>Contact Disclosure Requests</h2>
+
+    <p class="success"
+       th:if="${successMessage}"
+       th:text="${successMessage}"></p>
+
+    <p class="error"
+       th:if="${errorMessage}"
+       th:text="${errorMessage}"></p>
+
+    <div th:if="${#lists.isEmpty(disclosureRequests)}">
+        <p>No pending contact disclosure requests.</p>
+    </div>
+
+    <div class="card"
+         th:each="match : ${disclosureRequests}">
+
+        <h3>
+            Request #
+            <span th:text="${match.bloodRequest.id}"></span>
+        </h3>
+
+        <h4>Donor Information</h4>
+
+        <p>
+            <strong>Name:</strong>
+            <span th:text="${match.donor.user.fullName}"></span>
+        </p>
+
+        <p>
+            <strong>Blood Group:</strong>
+            <span th:text="${match.donor.bloodGroup}"></span>
+        </p>
+
+        <p>
+            <strong>City:</strong>
+            <span th:text="${match.donor.city}"></span>
+        </p>
+
+        <h4>Blood Request Information</h4>
+
+        <p>
+            <strong>Requester:</strong>
+            <span th:text="${match.bloodRequest.requester.fullName}"></span>
+        </p>
+
+        <p>
+            <strong>Blood Group:</strong>
+            <span th:text="${match.bloodRequest.bloodGroup}"></span>
+        </p>
+
+        <p>
+            <strong>Hospital:</strong>
+            <span th:text="${match.bloodRequest.hospitalName}"></span>
+        </p>
+
+        <p>
+            <strong>Donor Response:</strong>
+            <span th:text="${match.donorResponse}"></span>
+        </p>
+
+        <p>
+            <strong>Donor Consent:</strong>
+            <span th:text="${match.donorConsent ? 'Given' : 'Not given'}"></span>
+        </p>
+
+        <p>
+            <strong>Consent Date:</strong>
+            <span th:text="${match.consentAt}"></span>
+        </p>
+
+        <hr>
+
+        <form th:action="@{/admin/disclosures/{id}/review(id=${match.id})}"
+              method="post">
+
+            <button type="submit"
+                    name="decision"
+                    value="APPROVED"
+                    class="approve">
+                Approve Contact Disclosure
+            </button>
+
+            <button type="submit"
+                    name="decision"
+                    value="REJECTED"
+                    class="reject">
+                Reject Contact Disclosure
+            </button>
+        </form>
+
+    </div>
+
+    <p><a th:href="@{/admin/dashboard}">Back to Admin Dashboard</a></p>
+
+</div>
+</body>
+</html>

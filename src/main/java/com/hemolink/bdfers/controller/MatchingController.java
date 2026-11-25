@@ -7,6 +7,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 @Controller
 @RequestMapping("/requests/{requestId}/matches")
@@ -44,5 +49,21 @@ public class MatchingController {
                 requestId, userDetails.getUsername());
 
         return "redirect:/requests/" + requestId + "/matches?refreshed";
+    }
+
+    @GetMapping("/contacts")
+    public String approvedContacts(
+            @PathVariable Long requestId,
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "approvedContacts",
+                matchingService.getApprovedContacts(
+                        requestId, authentication.getName()));
+
+        model.addAttribute("requestId", requestId);
+
+        return "requester/approved-contacts";
     }
 }

@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HemoLink | Approved Donor Contacts</title>
+</head>
+
+<body>
+
+<h1>HemoLink</h1>
+<h2>Approved Donor Contacts</h2>
+
+<p>
+    Contact information is displayed only when the donor has accepted,
+    consented to sharing, and the administrator has approved disclosure.
+</p>
+
+<div th:if="${#lists.isEmpty(approvedContacts)}">
+    <p>
+        No approved donor contact information is available for this request.
+    </p>
+</div>
+
+<div th:each="match : ${approvedContacts}"
+     style="border: 1px solid #ddd; padding: 15px; margin: 15px 0;">
+
+    <h3 th:text="${match.donor.user.fullName}"></h3>
+
+    <p>
+        <strong>Blood Group:</strong>
+        <span th:text="${match.donor.bloodGroup}"></span>
+    </p>
+
+    <p>
+        <strong>City:</strong>
+        <span th:text="${match.donor.city}"></span>
+    </p>
+
+    <p>
+        <strong>Contact Number:</strong>
+        <span th:text="${match.donor.user.phone}"></span>
+    </p>
+
+    <p>
+        <strong>Disclosure Approved At:</strong>
+        <span th:text="${match.approvalAt}"></span>
+    </p>
+
+</div>
+
+<a th:href="@{/requests}">Back to My Requests</a>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
-
 package com.hemolink.bdfers.repository;
 
 import com.hemolink.bdfers.entity.BloodRequest;
+import com.hemolink.bdfers.enums.RequestAdminStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,4 +20,10 @@ public interface BloodRequestRepository
             Long id,
             String email
     );
+
+    List<BloodRequest> findAllByAdminStatusOrderByCreatedAtDesc(
+            RequestAdminStatus adminStatus
+    );
+
+    List<BloodRequest> findAllByOrderByCreatedAtDesc();
 }

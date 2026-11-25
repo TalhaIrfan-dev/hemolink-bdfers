@@ -32,9 +32,28 @@
     <strong th:text="${ineligibleDonors}">0</strong>
 </p>
 
+<p>
+    Pending Blood Requests:
+    <strong th:text="${pendingBloodRequests}">0</strong>
+</p>
+
 <hr>
 
 <a th:href="@{/admin/donors}">Manage Donor Eligibility</a>
+
+<br><br>
+
+<h3>Contact Disclosure Management</h3>
+
+<a th:href="@{/admin/disclosures}">
+    Review Contact Disclosure Requests
+</a>
+
+<br><br>
+
+<a th:href="@{/admin/blood-requests}">
+    Review Blood Requests
+</a>
 
 <br><br>
 

@@ -168,6 +168,10 @@
             View Potential Donors
         </a>
 
+        <a class="button" th:href="@{/requests/{id}/matches/contacts(id=${request.id})}">
+            View Approved Donor Contacts
+        </a>
+
         <form th:if="${request.adminStatus.name() == 'PENDING'
                        or request.adminStatus.name() == 'APPROVED'}"
               th:action="@{/requests/{id}/close(id=${request.id})}"
