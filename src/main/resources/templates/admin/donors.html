@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HemoLink | Donor Review</title>
+</head>
+<body>
+
+<h1>HemoLink</h1>
+<h2>Donor Eligibility Review</h2>
+
+<p th:if="${successMessage}"
+   th:text="${successMessage}"
+   style="color: green;"></p>
+
+<p th:if="${errorMessage}"
+   th:text="${errorMessage}"
+   style="color: red;"></p>
+
+<table border="1" cellpadding="10">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Blood Group</th>
+        <th>City</th>
+        <th>Date of Birth</th>
+        <th>Weight</th>
+        <th>Last Donation</th>
+        <th>Availability</th>
+        <th>Eligibility</th>
+        <th>Review</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="donor : ${donors}">
+        <td th:text="${donor.user.fullName}"></td>
+        <td th:text="${donor.user.email}"></td>
+        <td th:text="${donor.bloodGroup}"></td>
+        <td th:text="${donor.city}"></td>
+        <td th:text="${donor.dateOfBirth}"></td>
+        <td th:text="${donor.weight}"></td>
+        <td th:text="${donor.lastDonationDate != null
+            ? donor.lastDonationDate : 'Not provided'}"></td>
+        <td th:text="${donor.availability}"></td>
+        <td>
+            <strong th:text="${donor.eligibilityStatus}"></strong>
+            <p th:text="${donor.eligibilityReason}"></p>
+        </td>
+        <td>
+            <form th:action="@{/admin/donors/{id}/eligibility(id=${donor.id})}"
+                  method="post">
+
+                <label>Decision</label>
+                <select name="decision" required>
+                    <option value="ELIGIBLE">Approve</option>
+                    <option value="INELIGIBLE">Mark Ineligible</option>
+                </select>
+
+                <br><br>
+
+                <label>Review Reason</label>
+                <textarea name="reason"
+                          required
+                          minlength="3"
+                          maxlength="500"></textarea>
+
+                <br><br>
+
+                <button type="submit">Save Review</button>
+            </form>
+
+            <p th:if="${donor.eligibilityReviewedAt != null}">
+                Reviewed:
+                <span th:text="${donor.eligibilityReviewedAt}"></span>
+            </p>
+        </td>
+    </tr>
+
+    <tr th:if="${#lists.isEmpty(donors)}">
+        <td colspan="10">No donor profiles found.</td>
+    </tr>
+    </tbody>
+</table>
+
+<br>
+<a th:href="@{/admin/dashboard}">Back to Admin Dashboard</a>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>HemoLink | Admin Dashboard</title>
+</head>
+<body>
+
+<h1>HemoLink</h1>
+<h2>Administrator Dashboard</h2>
+
+<p>Welcome to the HemoLink administration panel.</p>
+
+<hr>
+
+<h3>Donor Statistics</h3>
+
+<p>Total Donors:
+    <strong th:text="${totalDonors}">0</strong>
+</p>
+
+<p>Awaiting Review:
+    <strong th:text="${pendingDonors}">0</strong>
+</p>
+
+<p>Eligible Donors:
+    <strong th:text="${eligibleDonors}">0</strong>
+</p>
+
+<p>Ineligible Donors:
+    <strong th:text="${ineligibleDonors}">0</strong>
+</p>
+
+<hr>
+
+<a th:href="@{/admin/donors}">Manage Donor Eligibility</a>
+
+<br><br>
+
+<a th:href="@{/dashboard}">Back to Dashboard</a>
+
+</body>
+</html>

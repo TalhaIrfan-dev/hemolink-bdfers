@@ -25,4 +25,6 @@ public interface DonorProfileRepository
             AvailabilityStatus availability,
             EligibilityStatus eligibilityStatus
     );
+
+    List<DonorProfile> findAllByOrderByCreatedAtDesc();
 }

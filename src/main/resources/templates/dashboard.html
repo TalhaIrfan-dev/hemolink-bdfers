@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Dashboard | HemoLink</title>
@@ -17,6 +18,13 @@
 <a th:href="@{/requests/new}">Create Blood Request</a>
 <br><br>
 <a th:href="@{/requests}">My Blood Requests</a>
+
+<div sec:authorize="hasRole('ADMIN')">
+    <h3>Administration</h3>
+    <a th:href="@{/admin/dashboard}">
+        Open Admin Dashboard
+    </a>
+</div>
 
 <form th:action="@{/logout}" method="post">
     <button type="submit">Logout</button>

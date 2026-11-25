@@ -84,4 +84,19 @@ public class DonorProfile {
     public void setEligibilityStatus(EligibilityStatus eligibilityStatus) { this.eligibilityStatus = eligibilityStatus; }
     public void setEligibilityReason(String eligibilityReason) { this.eligibilityReason = eligibilityReason; }
     public void setActive(boolean active) { this.active = active; }
+    public AppUser getEligibilityReviewedBy() {
+        return eligibilityReviewedBy;
+    }
+
+    public void setEligibilityReviewedBy(AppUser eligibilityReviewedBy) {
+        this.eligibilityReviewedBy = eligibilityReviewedBy;
+    }
+
+    public LocalDateTime getEligibilityReviewedAt() {
+        return eligibilityReviewedAt;
+    }
+
+    public void setEligibilityReviewedAt(LocalDateTime eligibilityReviewedAt) {
+        this.eligibilityReviewedAt = eligibilityReviewedAt;
+    }
 }
