@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blood Request | HemoLink</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        h2 { margin-top: 0; color: #b42332; }
+
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 22px;
+            padding: 12px 20px;
+            background: #b42332;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .error { color: #c62828; font-size: 13px; margin-top: 5px; }
+        .back { display: inline-block; margin-top: 18px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Create Blood Request</h2>
+    <p>Provide the details of the blood requirement.</p>
+
+    <form th:action="@{/requests}" th:object="${request}" method="post">
+
+        <label>Blood Group</label>
+        <select th:field="*{bloodGroup}">
+            <option value="">Select blood group</option>
+            <option th:each="group : ${bloodGroups}"
+                    th:value="${group}"
+                    th:text="${#strings.replace(group.name(), '_', ' ')}">
+            </option>
+        </select>
+        <div class="error" th:errors="*{bloodGroup}"></div>
+
+        <label>Units Required</label>
+        <input type="number" th:field="*{unitsRequired}" min="1"
+               placeholder="Enter required units">
+        <div class="error" th:errors="*{unitsRequired}"></div>
+
+        <label>City / Service Area</label>
+        <input type="text" th:field="*{city}" placeholder="Enter city">
+        <div class="error" th:errors="*{city}"></div>
+
+        <label>Hospital Name</label>
+        <input type="text" th:field="*{hospitalName}"
+               placeholder="Enter hospital name">
+        <div class="error" th:errors="*{hospitalName}"></div>
+
+        <label>Required Date and Time</label>
+        <input type="datetime-local" th:field="*{requiredAt}">
+        <div class="error" th:errors="*{requiredAt}"></div>
+
+        <label>Urgency</label>
+        <select th:field="*{urgency}">
+            <option value="">Select urgency</option>
+            <option th:each="option : ${urgencyOptions}"
+                    th:value="${option}"
+                    th:text="${option}">
+            </option>
+        </select>
+        <div class="error" th:errors="*{urgency}"></div>
+
+        <button type="submit">Submit Blood Request</button>
+    </form>
+
+    <a class="back" th:href="@{/requests}">View My Requests</a>
+
+</div>
+
+</body>
+</html>

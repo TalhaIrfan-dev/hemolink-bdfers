@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blood Requests | HemoLink</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .request-card {
+            background: white;
+            padding: 20px;
+            margin: 18px 0;
+            border-radius: 9px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .request-card p { margin: 9px 0; }
+
+        .status {
+            font-weight: bold;
+            color: #b42332;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #b42332;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .close-button {
+            background: #555;
+            margin-top: 10px;
+        }
+
+        .message {
+            background: #e6f4ea;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .error {
+            background: #fde8e8;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #a11;
+        }
+
+        .empty {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h2>My Blood Requests</h2>
+            <p>View and manage your submitted requests.</p>
+        </div>
+
+        <a class="button" th:href="@{/requests/new}">
+            Create New Request
+        </a>
+    </div>
+
+    <div class="message" th:if="${param.success}">
+        Blood request submitted successfully.
+    </div>
+
+    <div class="message" th:if="${param.closed}">
+        Blood request closed successfully.
+    </div>
+
+    <div class="error" th:if="${errorMessage}"
+         th:text="${errorMessage}">
+    </div>
+
+    <div th:if="${#lists.isEmpty(requests)}" class="empty">
+        <h3>No blood requests found</h3>
+        <p>You have not submitted any blood requests yet.</p>
+    </div>
+
+    <div th:each="request : ${requests}" class="request-card">
+
+        <h3>
+            Request #<span th:text="${request.id}"></span>
+        </h3>
+
+        <p>
+            <strong>Blood Group:</strong>
+            <span th:text="${#strings.replace(request.bloodGroup.name(), '_', ' ')}"></span>
+        </p>
+
+        <p>
+            <strong>Units Required:</strong>
+            <span th:text="${request.unitsRequired}"></span>
+        </p>
+
+        <p>
+            <strong>Fulfilled Units:</strong>
+            <span th:text="${request.fulfilledUnits}"></span>
+        </p>
+
+        <p>
+            <strong>City:</strong>
+            <span th:text="${request.city}"></span>
+        </p>
+
+        <p>
+            <strong>Hospital:</strong>
+            <span th:text="${request.hospitalName}"></span>
+        </p>
+
+        <p>
+            <strong>Required At:</strong>
+            <span th:text="${#temporals.format(request.requiredAt, 'dd MMM yyyy HH:mm')}"></span>
+        </p>
+
+        <p>
+            <strong>Urgency:</strong>
+            <span th:text="${request.urgency}"></span>
+        </p>
+
+        <p>
+            <strong>Admin Status:</strong>
+            <span class="status" th:text="${request.adminStatus}"></span>
+        </p>
+
+        <p>
+            <strong>Matching Status:</strong>
+            <span th:text="${request.matchingStatus}"></span>
+        </p>
+
+        <form th:if="${request.adminStatus.name() == 'PENDING'
+                       or request.adminStatus.name() == 'APPROVED'}"
+              th:action="@{/requests/{id}/close(id=${request.id})}"
+              method="post">
+
+            <button type="submit" class="button close-button">
+                Close Request
+            </button>
+        </form>
+
+    </div>
+
+    <p><a th:href="@{/dashboard}">Back to Dashboard</a></p>
+
+</div>
+
+</body>
+</html>
