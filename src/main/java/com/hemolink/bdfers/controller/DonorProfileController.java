@@ -1,3 +1,4 @@
+
 package com.hemolink.bdfers.controller;
 
 import com.hemolink.bdfers.dto.request.DonorProfileRequest;
@@ -44,12 +45,15 @@ public class DonorProfileController {
 
         model.addAttribute("profileRequest", request);
         model.addAttribute("profileExists", profile != null);
+
         model.addAttribute("eligibilityStatus",
                 profile != null ? profile.getEligibilityStatus() : null);
+
         model.addAttribute("eligibilityReason",
                 profile != null ? profile.getEligibilityReason() : null);
 
         addFormOptions(model);
+
         return "donor/profile";
     }
 
@@ -62,23 +66,50 @@ public class DonorProfileController {
             RedirectAttributes redirectAttributes) {
 
         if (result.hasErrors()) {
-            model.addAttribute("profileExists",
-                    donorProfileService.getProfile(userDetails.getUsername()) != null);
+
+            DonorProfile profile =
+                    donorProfileService.getProfile(userDetails.getUsername());
+
+            model.addAttribute("profileExists", profile != null);
+
+            model.addAttribute("eligibilityStatus",
+                    profile != null ? profile.getEligibilityStatus() : null);
+
+            model.addAttribute("eligibilityReason",
+                    profile != null ? profile.getEligibilityReason() : null);
+
             addFormOptions(model);
+
             return "donor/profile";
         }
 
         try {
             donorProfileService.saveProfile(userDetails.getUsername(), request);
+
             redirectAttributes.addFlashAttribute(
-                    "successMessage", "Donor profile saved successfully.");
+                    "successMessage",
+                    "Donor profile saved successfully."
+            );
+
             return "redirect:/donor/profile";
 
         } catch (IllegalArgumentException ex) {
+
             model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("profileExists",
-                    donorProfileService.getProfile(userDetails.getUsername()) != null);
+
+            DonorProfile profile =
+                    donorProfileService.getProfile(userDetails.getUsername());
+
+            model.addAttribute("profileExists", profile != null);
+
+            model.addAttribute("eligibilityStatus",
+                    profile != null ? profile.getEligibilityStatus() : null);
+
+            model.addAttribute("eligibilityReason",
+                    profile != null ? profile.getEligibilityReason() : null);
+
             addFormOptions(model);
+
             return "donor/profile";
         }
     }
