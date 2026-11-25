@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Matched Requests | HemoLink</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #222;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 18px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .button {
+            padding: 9px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 7px;
+        }
+
+        .accept {
+            background: #16834a;
+            color: white;
+        }
+
+        .decline {
+            background: #b42332;
+            color: white;
+        }
+
+        .consent {
+            background: #175cd3;
+            color: white;
+        }
+
+        .message {
+            padding: 12px;
+            background: #e6f4ea;
+            margin-bottom: 12px;
+        }
+
+        .error {
+            padding: 12px;
+            background: #fee4e2;
+            margin-bottom: 12px;
+        }
+
+        .notice {
+            background: #fff4e5;
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .empty {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>HemoLink</h1>
+    <h2>My Matched Blood Requests</h2>
+
+    <p th:if="${successMessage}"
+       class="message"
+       th:text="${successMessage}"></p>
+
+    <p th:if="${errorMessage}"
+       class="error"
+       th:text="${errorMessage}"></p>
+
+    <div th:if="${#lists.isEmpty(matches)}" class="empty">
+        <h3>No matched requests</h3>
+        <p>
+            There are currently no blood requests matching your
+            eligible and available donor profile.
+        </p>
+    </div>
+
+    <div th:each="match : ${matches}" class="card">
+
+        <h3>
+            Blood Request #
+            <span th:text="${match.bloodRequest.id}"></span>
+        </h3>
+
+        <p>
+            <strong>Blood Group:</strong>
+            <span th:text="${#strings.replace(
+                match.bloodRequest.bloodGroup.name(), '_', ' ')}"></span>
+        </p>
+
+        <p>
+            <strong>Units Required:</strong>
+            <span th:text="${match.bloodRequest.unitsRequired}"></span>
+        </p>
+
+        <p>
+            <strong>City:</strong>
+            <span th:text="${match.bloodRequest.city}"></span>
+        </p>
+
+        <p>
+            <strong>Hospital:</strong>
+            <span th:text="${match.bloodRequest.hospitalName}"></span>
+        </p>
+
+        <p>
+            <strong>Required At:</strong>
+            <span th:text="${#temporals.format(
+                match.bloodRequest.requiredAt, 'dd MMM yyyy HH:mm')}"></span>
+        </p>
+
+        <p>
+            <strong>Urgency:</strong>
+            <span th:text="${match.bloodRequest.urgency}"></span>
+        </p>
+
+        <p>
+            <strong>Request Status:</strong>
+            <span th:text="${match.bloodRequest.adminStatus}"></span>
+        </p>
+
+        <hr>
+
+        <p>
+            <strong>Your Response:</strong>
+            <span th:text="${match.donorResponse}"></span>
+        </p>
+
+        <div th:if="${match.donorResponse.name() == 'PENDING'}">
+
+            <form th:action="@{/donor/requests/{id}/respond(id=${match.id})}"
+                  method="post"
+                  style="display:inline;">
+
+                <input type="hidden" name="response" value="ACCEPTED">
+
+                <button class="button accept" type="submit">
+                    Accept Request
+                </button>
+            </form>
+
+            <form th:action="@{/donor/requests/{id}/respond(id=${match.id})}"
+                  method="post"
+                  style="display:inline;">
+
+                <input type="hidden" name="response" value="DECLINED">
+
+                <button class="button decline" type="submit">
+                    Decline Request
+                </button>
+            </form>
+
+        </div>
+
+        <div th:if="${match.donorResponse.name() == 'ACCEPTED'}">
+
+            <p>
+                <strong>Contact Sharing Consent:</strong>
+                <span th:text="${match.donorConsent ? 'Given' : 'Not given'}"></span>
+            </p>
+
+            <div th:if="${!match.donorConsent}">
+                <div class="notice">
+                    <p>
+                        By selecting the button below, you explicitly
+                        consent to sharing your registered contact number
+                        with the requester, subject to administrator approval.
+                    </p>
+
+                    <form th:action="@{/donor/requests/{id}/consent(id=${match.id})}"
+                          method="post">
+
+                        <button class="button consent" type="submit">
+                            I Consent to Share My Contact
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <p th:if="${match.donorConsent}">
+                Your consent has been recorded. Contact information
+                remains hidden until an administrator approves disclosure.
+            </p>
+
+        </div>
+
+        <div th:if="${match.donorResponse.name() == 'DECLINED'}">
+            <p>You declined this request.</p>
+        </div>
+
+        <div class="notice"
+             th:if="${match.bloodRequest.adminStatus.name() == 'CLOSED'
+                  or match.bloodRequest.adminStatus.name() == 'REJECTED'
+                  or match.bloodRequest.adminStatus.name() == 'FULFILLED'}">
+
+            This request is no longer active. No further response
+            or contact-sharing action is available.
+        </div>
+
+        <p class="notice">
+            Requester contact information is protected.
+            Your contact details are not visible to the requester
+            unless you accept, consent, and an administrator approves.
+        </p>
+
+    </div>
+
+    <p><a th:href="@{/dashboard}">Back to Dashboard</a></p>
+
+</div>
+</body>
+</html>

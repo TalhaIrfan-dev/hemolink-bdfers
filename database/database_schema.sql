@@ -191,3 +191,21 @@ CREATE INDEX idx_notifications_user
 
 -- END OF SCHEMA
 
+ALTER TABLE blood_requests
+ADD COLUMN required_at DATETIME NOT NULL AFTER hospital_name;
+
+ALTER TABLE donor_profiles
+ADD COLUMN eligibility_reviewed_by BIGINT NULL,
+ADD COLUMN eligibility_reviewed_at DATETIME NULL,
+ADD CONSTRAINT fk_donor_eligibility_reviewer
+    FOREIGN KEY (eligibility_reviewed_by) REFERENCES users(id);
+
+SHOW TABLES;
+
+UPDATE users
+SET role = 'ADMIN'
+WHERE email = 'talhairfanarain7861@gmail.com';
+
+select * from users;
+select * from donor_profiles;
+select * from blood_requests;

@@ -1,13 +1,9 @@
 
 package com.hemolink.bdfers.service;
 
-import com.hemolink.bdfers.entity.BloodRequest;
-import com.hemolink.bdfers.entity.DonorMatch;
-import com.hemolink.bdfers.entity.DonorProfile;
+import com.hemolink.bdfers.entity.*;
 import com.hemolink.bdfers.enums.*;
-import com.hemolink.bdfers.repository.BloodRequestRepository;
-import com.hemolink.bdfers.repository.DonorMatchRepository;
-import com.hemolink.bdfers.repository.DonorProfileRepository;
+import com.hemolink.bdfers.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +15,18 @@ public class DonorMatchingService {
     private final BloodRequestRepository requestRepository;
     private final DonorProfileRepository donorProfileRepository;
     private final DonorMatchRepository donorMatchRepository;
+    private final NotificationRepository notificationRepository;
 
     public DonorMatchingService(
             BloodRequestRepository requestRepository,
             DonorProfileRepository donorProfileRepository,
-            DonorMatchRepository donorMatchRepository) {
+            DonorMatchRepository donorMatchRepository,
+            NotificationRepository notificationRepository) {
+
         this.requestRepository = requestRepository;
         this.donorProfileRepository = donorProfileRepository;
         this.donorMatchRepository = donorMatchRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @Transactional
@@ -40,7 +40,7 @@ public class DonorMatchingService {
                 || request.getAdminStatus() == RequestAdminStatus.REJECTED
                 || request.getAdminStatus() == RequestAdminStatus.FULFILLED) {
             throw new IllegalStateException(
-                    "Matching is not allowed for this request");
+                    "Matching is not allowed for this request.");
         }
 
         List<DonorProfile> eligibleDonors =
@@ -54,7 +54,6 @@ public class DonorMatchingService {
 
         for (DonorProfile donor : eligibleDonors) {
 
-            // A requester should not be matched to their own donor profile.
             if (donor.getUser().getId()
                     .equals(request.getRequester().getId())) {
                 continue;
@@ -76,6 +75,16 @@ public class DonorMatchingService {
             match.setAdminApproval(AdminApprovalStatus.PENDING);
 
             donorMatchRepository.save(match);
+
+            Notification notification = new Notification();
+            notification.setUser(donor.getUser());
+            notification.setBloodRequest(request);
+            notification.setMessage(
+                    "A new " + request.getUrgency()
+                    + " blood request matches your donor profile. "
+                    + "Please review it in My Matched Requests.");
+
+            notificationRepository.save(notification);
         }
 
         request.setMatchingStatus(
@@ -88,7 +97,8 @@ public class DonorMatchingService {
     }
 
     @Transactional(readOnly = true)
-    public List<DonorMatch> getMatches(Long requestId, String requesterEmail) {
+    public List<DonorMatch> getMatches(
+            Long requestId, String requesterEmail) {
 
         BloodRequest request = requestRepository
                 .findByIdAndRequesterEmail(requestId, requesterEmail)

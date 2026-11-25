@@ -15,6 +15,12 @@
     <li><a th:href="@{/donor/profile}">Create / Manage Donor Profile</a></li>
 </ul>
 
+<li>
+    <a th:href="@{/donor/requests}">
+        My Matched Blood Requests
+    </a>
+</li>
+
 <a th:href="@{/requests/new}">Create Blood Request</a>
 <br><br>
 <a th:href="@{/requests}">My Blood Requests</a>
@@ -25,6 +31,7 @@
         Open Admin Dashboard
     </a>
 </div>
+
 
 <form th:action="@{/logout}" method="post">
     <button type="submit">Logout</button>
