@@ -55,6 +55,13 @@ public class DonorProfile {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "eligibility_reviewed_by")
+    private AppUser eligibilityReviewedBy;
+
+    @Column(name = "eligibility_reviewed_at")
+    private LocalDateTime eligibilityReviewedAt;
+
     public Long getId() { return id; }
     public AppUser getUser() { return user; }
     public BloodGroup getBloodGroup() { return bloodGroup; }

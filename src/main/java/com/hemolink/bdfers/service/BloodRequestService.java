@@ -6,6 +6,7 @@ import com.hemolink.bdfers.entity.AppUser;
 import com.hemolink.bdfers.entity.BloodRequest;
 import com.hemolink.bdfers.enums.MatchingStatus;
 import com.hemolink.bdfers.enums.RequestAdminStatus;
+import com.hemolink.bdfers.enums.RequestUrgency;
 import com.hemolink.bdfers.repository.BloodRequestRepository;
 import com.hemolink.bdfers.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -18,19 +19,25 @@ public class BloodRequestService {
 
     private final BloodRequestRepository bloodRequestRepository;
     private final UserRepository userRepository;
+    private final DonorMatchingService matchingService;
 
     public BloodRequestService(
             BloodRequestRepository bloodRequestRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            DonorMatchingService matchingService) {
+
         this.bloodRequestRepository = bloodRequestRepository;
         this.userRepository = userRepository;
+        this.matchingService = matchingService;
     }
 
     @Transactional
-    public BloodRequest createRequest(BloodRequestRequest request, String email) {
+    public BloodRequest createRequest(
+            BloodRequestRequest request, String email) {
 
         AppUser requester = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found"));
 
         BloodRequest bloodRequest = new BloodRequest();
 
@@ -46,7 +53,15 @@ public class BloodRequestService {
         bloodRequest.setAdminStatus(RequestAdminStatus.PENDING);
         bloodRequest.setMatchingStatus(MatchingStatus.NOT_STARTED);
 
-        return bloodRequestRepository.save(bloodRequest);
+        BloodRequest savedRequest =
+                bloodRequestRepository.saveAndFlush(bloodRequest);
+
+        // Critical requests start donor matching immediately.
+        if (request.getUrgency() == RequestUrgency.CRITICAL) {
+            matchingService.generateMatches(savedRequest.getId());
+        }
+
+        return savedRequest;
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +85,8 @@ public class BloodRequestService {
         }
 
         request.setAdminStatus(RequestAdminStatus.CLOSED);
+        request.setMatchingStatus(MatchingStatus.NOT_STARTED);
+
         bloodRequestRepository.save(request);
     }
 }

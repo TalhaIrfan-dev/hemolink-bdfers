@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potential Donors | HemoLink</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #b42332;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .message {
+            background: #e6f4ea;
+            padding: 12px;
+            border-radius: 5px;
+        }
+
+        .empty {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Potential Donors</h2>
+
+    <p>
+        Request ID:
+        <strong th:text="${requestId}"></strong>
+    </p>
+
+    <div class="message" th:if="${param.refreshed}">
+        Matching results refreshed successfully.
+    </div>
+
+    <form th:action="@{/requests/{id}/matches/refresh(id=${requestId})}"
+          method="post">
+        <button class="button" type="submit">Refresh Matches</button>
+    </form>
+
+    <div th:if="${#lists.isEmpty(matches)}" class="empty">
+        <h3>No potential donors found</h3>
+        <p>
+            No eligible, available donors currently match this request's
+            blood group and city.
+        </p>
+    </div>
+
+    <div th:each="match, status : ${matches}" class="card">
+
+        <h3>
+            Potential Donor #
+            <span th:text="${status.count}"></span>
+        </h3>
+
+        <p>
+            <strong>Blood Group:</strong>
+            <span th:text="${#strings.replace(match.donor.bloodGroup.name(), '_', ' ')}"></span>
+        </p>
+
+        <p>
+            <strong>City:</strong>
+            <span th:text="${match.donor.city}"></span>
+        </p>
+
+        <p>
+            <strong>Availability:</strong>
+            <span th:text="${match.donor.availability}"></span>
+        </p>
+
+        <p>
+            <strong>Donor Response:</strong>
+            <span th:text="${match.donorResponse}"></span>
+        </p>
+
+        <p>
+            <strong>Admin Approval:</strong>
+            <span th:text="${match.adminApproval}"></span>
+        </p>
+
+        <p>Contact information is protected.</p>
+
+    </div>
+
+    <p><a th:href="@{/requests}">Back to My Requests</a></p>
+
+</div>
+
+</body>
+</html>

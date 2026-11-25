@@ -163,6 +163,11 @@
             <span th:text="${request.matchingStatus}"></span>
         </p>
 
+        <a class="button"
+            th:href="@{/requests/{id}/matches(id=${request.id})}">
+            View Potential Donors
+        </a>
+
         <form th:if="${request.adminStatus.name() == 'PENDING'
                        or request.adminStatus.name() == 'APPROVED'}"
               th:action="@{/requests/{id}/close(id=${request.id})}"
