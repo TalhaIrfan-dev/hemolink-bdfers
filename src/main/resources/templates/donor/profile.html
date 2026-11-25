@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Profile | HemoLink</title>
+</head>
+<body>
+
+<h1>HemoLink</h1>
+<h2>Donor Profile</h2>
+
+<p th:if="${successMessage}" th:text="${successMessage}" style="color:green"></p>
+<p th:if="${errorMessage}" th:text="${errorMessage}" style="color:red"></p>
+
+<p th:if="${profileExists}">
+    Eligibility:
+    <strong th:text="${eligibilityStatus}"></strong>
+    <br>
+    <span th:text="${eligibilityReason}"></span>
+</p>
+
+<form th:action="@{/donor/profile}"
+      th:object="${profileRequest}" method="post">
+
+    <label>Blood Group</label>
+    <select th:field="*{bloodGroup}" required>
+        <option value="">Select blood group</option>
+        <option th:each="group : ${bloodGroups}"
+                th:value="${group}"
+                th:text="${group}">
+        </option>
+    </select>
+    <small th:errors="*{bloodGroup}" style="color:red"></small>
+
+    <br><br>
+
+    <label>City / Service Area</label>
+    <input type="text" th:field="*{city}" required>
+    <small th:errors="*{city}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Date of Birth</label>
+    <input type="date" th:field="*{dateOfBirth}" required>
+    <small th:errors="*{dateOfBirth}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Weight (kg)</label>
+    <input type="number" th:field="*{weight}"
+           step="0.01" min="1" max="500" required>
+    <small th:errors="*{weight}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Last Donation Date (optional)</label>
+    <input type="date" th:field="*{lastDonationDate}">
+    <small th:errors="*{lastDonationDate}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Availability</label>
+    <select th:field="*{availability}" required>
+        <option th:each="status : ${availabilityOptions}"
+                th:value="${status}"
+                th:text="${status}">
+        </option>
+    </select>
+    <small th:errors="*{availability}" style="color:red"></small>
+
+    <br><br>
+
+    <button type="submit">Save Donor Profile</button>
+</form>
+
+<br>
+<a th:href="@{/dashboard}">Back to Dashboard</a>
+
+</body>
+</html>

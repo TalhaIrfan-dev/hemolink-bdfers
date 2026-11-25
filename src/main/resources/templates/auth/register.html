@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | HemoLink</title>
+</head>
+<body>
+
+<h1>HemoLink</h1>
+<h2>Create Your Account</h2>
+
+<p th:if="${error}" th:text="${error}" style="color:red"></p>
+
+<form th:action="@{/register}" th:object="${registerRequest}" method="post">
+
+    <label>Full Name</label>
+    <input type="text" th:field="*{fullName}" required>
+    <small th:errors="*{fullName}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Email</label>
+    <input type="email" th:field="*{email}" required>
+    <small th:errors="*{email}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Phone</label>
+    <input type="text" th:field="*{phone}" required>
+    <small th:errors="*{phone}" style="color:red"></small>
+
+    <br><br>
+
+    <label>Password</label>
+    <input type="password" th:field="*{password}" minlength="8" required>
+    <small th:errors="*{password}" style="color:red"></small>
+
+    <br><br>
+
+    <button type="submit">Create Account</button>
+</form>
+
+<p>Already registered? <a th:href="@{/login}">Login</a></p>
+
+</body>
+</html>
