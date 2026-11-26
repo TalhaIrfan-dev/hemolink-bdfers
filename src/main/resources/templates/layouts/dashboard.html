@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="page(pageTitle, activePage, content)" class="app-shell">
+    <div id="hlSidebarOverlay" class="hl-overlay" aria-hidden="true"></div>
+    <div id="hlSidebar" th:replace="~{fragments/sidebar :: sidebar(${activePage})}"></div>
+    <div class="hl-main">
+        <div th:replace="~{fragments/topbar :: topbar}"></div>
+        <main class="hl-page-content" th:replace="${content}"></main>
+    </div>
+</div>
+</body>
+</html>

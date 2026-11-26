@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="topbar" class="hl-topbar">
+    <div class="hl-topbar-left">
+        <button id="hlMenuToggle" class="hl-menu-toggle" type="button" aria-label="Open navigation menu" aria-controls="hlSidebar">☰</button>
+        <label class="hl-search" for="hlQuickSearch">
+            <span aria-hidden="true">⌕</span>
+            <input id="hlQuickSearch" type="search" placeholder="Search menu pages..." autocomplete="off">
+        </label>
+    </div>
+    <div class="hl-topbar-right">
+        <div class="hl-user">
+            <span class="hl-avatar" aria-hidden="true">HL</span>
+            <span>
+                <span class="hl-user-email" sec:authentication="name">user@example.com</span>
+                <span class="hl-user-role" sec:authorize="hasRole('ADMIN')">Administrator</span>
+                <span class="hl-user-role" sec:authorize="hasRole('USER')">HemoLink Member</span>
+            </span>
+        </div>
+    </div>
+</header>
+</body>
+</html>

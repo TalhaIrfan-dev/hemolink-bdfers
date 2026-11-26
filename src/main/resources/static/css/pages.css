@@ -1,0 +1,19 @@
+.hl-grid { display: grid; gap: 18px; }
+.hl-grid-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hl-quick-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 245px; }
+.hl-quick-card p { flex: 1; margin-bottom: 18px; }
+.hl-quick-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 17px; border-radius: 14px; color: var(--hl-green-700); background: var(--hl-green-100); font-size: 23px; }
+.hl-text-link { align-self: center; font-size: 12px; font-weight: 700; }
+.hl-help-card { display: flex; align-items: center; gap: 18px; margin-top: 20px; background: linear-gradient(110deg, #fff, #f0fbf6); }
+.hl-help-card h2 { margin-bottom: 5px; }
+.hl-help-card p { margin: 0; }
+.hl-help-mark { display: grid; flex: 0 0 54px; place-items: center; width: 54px; height: 54px; border-radius: 50%; color: #fff; background: var(--hl-green-700); font-size: 25px; }
+.hl-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.hl-icon-warning { color: var(--hl-orange-600); background: var(--hl-orange-100); }
+.hl-icon-danger { color: var(--hl-red-600); background: var(--hl-red-100); }
+.hl-icon-info { color: var(--hl-blue-600); background: var(--hl-blue-100); }
+.hl-admin-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.hl-admin-actions .hl-card { display: flex; flex-direction: column; align-items: flex-start; }
+.hl-admin-actions p { flex: 1; }
+@media (max-width: 1100px) { .hl-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hl-grid-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hl-admin-actions { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 650px) { .hl-grid-quick, .hl-stat-grid, .hl-admin-actions { grid-template-columns: 1fr; } .hl-quick-card { min-height: 0; } .hl-help-card { align-items: flex-start; } }

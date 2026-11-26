@@ -1,0 +1,27 @@
+:root {
+    --hl-teal-950: #063f3d;
+    --hl-teal-900: #064e4a;
+    --hl-teal-800: #075d55;
+    --hl-teal-700: #087566;
+    --hl-green-700: #008b62;
+    --hl-green-600: #009b70;
+    --hl-green-500: #12ad7b;
+    --hl-green-100: #dff7ed;
+    --hl-green-50: #effaf5;
+    --hl-red-600: #dc3545;
+    --hl-red-100: #fde8eb;
+    --hl-orange-600: #d97706;
+    --hl-orange-100: #fff2d8;
+    --hl-blue-600: #2563eb;
+    --hl-blue-100: #e8f0ff;
+    --hl-ink: #14212b;
+    --hl-muted: #64748b;
+    --hl-border: #e5eeeb;
+    --hl-surface: #ffffff;
+    --hl-background: #f1f7f6;
+    --hl-shadow: 0 8px 24px rgba(16, 65, 59, .07);
+    --hl-radius-lg: 18px;
+    --hl-radius-md: 12px;
+    --hl-sidebar-width: 260px;
+    --hl-topbar-height: 72px;
+}
