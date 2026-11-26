@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="alerts" class="hl-alerts">
+    <div class="hl-alert hl-alert-success" th:if="${successMessage}" th:text="${successMessage}" role="status"></div>
+    <div class="hl-alert hl-alert-error" th:if="${errorMessage}" th:text="${errorMessage}" role="alert"></div>
+</div>
+</body>
+</html>

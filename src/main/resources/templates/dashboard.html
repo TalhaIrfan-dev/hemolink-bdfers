@@ -1,41 +1,66 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | HemoLink</title>
+    <link rel="stylesheet" th:href="@{/css/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <script th:src="@{/js/main.js}" defer></script>
 </head>
 <body>
+<div th:replace="~{layouts/dashboard :: page('Dashboard', 'dashboard', ~{::pageContent})}"></div>
 
-<h1>Welcome to HemoLink</h1>
+<main th:fragment="pageContent" class="hl-page-content">
+    <div class="hl-page-heading">
+        <div>
+            <h1>Welcome to HemoLink 👋</h1>
+            <p>Find blood donors, manage requests, and help connect people in need.</p>
+        </div>
+    </div>
 
-<p>You are successfully logged in.</p>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
 
-<ul>
-    <li><a th:href="@{/donor/profile}">Create / Manage Donor Profile</a></li>
-</ul>
+    <section class="hl-grid hl-grid-quick">
+        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
+            <div class="hl-quick-icon">＋</div>
+            <h2>Create a blood request</h2>
+            <p class="muted">Submit a new request with blood group, required units, hospital and urgency.</p>
+            <a class="hl-button" th:href="@{/requests/new}">Create Request <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
+            <div class="hl-quick-icon">☷</div>
+            <h2>Track your requests</h2>
+            <p class="muted">Review request status, matching progress and approved donor contacts.</p>
+            <a class="hl-button hl-button-secondary" th:href="@{/requests}">My Requests <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
+            <div class="hl-quick-icon">♥</div>
+            <h2>Become a donor</h2>
+            <p class="muted">Complete your donor profile and review blood requests matched to your profile.</p>
+            <div class="hl-action-row">
+                <a class="hl-button hl-button-secondary" th:href="@{/donor/profile}">My Donor Profile</a>
+                <a class="hl-text-link" th:href="@{/donor/requests}">Matched requests →</a>
+            </div>
+        </article>
+        <article class="hl-card hl-quick-card" sec:authorize="hasRole('ADMIN')">
+            <div class="hl-quick-icon">▦</div>
+            <h2>Administration</h2>
+            <p class="muted">Review blood requests, manage donor eligibility and approve contact disclosures.</p>
+            <a class="hl-button" th:href="@{/admin/dashboard}">Open Admin Dashboard <span aria-hidden="true">→</span></a>
+        </article>
+    </section>
 
-<li>
-    <a th:href="@{/donor/requests}">
-        My Matched Blood Requests
-    </a>
-</li>
-
-<a th:href="@{/requests/new}">Create Blood Request</a>
-<br><br>
-<a th:href="@{/requests}">My Blood Requests</a>
-
-<div sec:authorize="hasRole('ADMIN')">
-    <h3>Administration</h3>
-    <a th:href="@{/admin/dashboard}">
-        Open Admin Dashboard
-    </a>
-</div>
-
-
-<form th:action="@{/logout}" method="post">
-    <button type="submit">Logout</button>
-</form>
-
+    <section class="hl-card hl-help-card">
+        <div class="hl-help-mark">♥</div>
+        <div>
+            <h2>Every donation can make a difference.</h2>
+            <p class="muted">Keep your donor profile and availability up to date so HemoLink can identify suitable matches.</p>
+        </div>
+    </section>
+</main>
 </body>
 </html>

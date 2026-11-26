@@ -1,63 +1,72 @@
-
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>HemoLink | Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | HemoLink</title>
+    <link rel="stylesheet" th:href="@{/css/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <script th:src="@{/js/main.js}" defer></script>
 </head>
 <body>
+<div th:replace="~{layouts/dashboard :: page('Admin Dashboard', 'admin-dashboard', ~{::pageContent})}"></div>
 
-<h1>HemoLink</h1>
-<h2>Administrator Dashboard</h2>
+<main th:fragment="pageContent" class="hl-page-content">
+    <div class="hl-page-heading">
+        <div>
+            <h1>Administrator Dashboard</h1>
+            <p>Monitor donor eligibility and review incoming blood requests.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button" th:href="@{/admin/blood-requests}">Review Blood Requests <span aria-hidden="true">→</span></a>
+        </div>
+    </div>
 
-<p>Welcome to the HemoLink administration panel.</p>
+    <div th:replace="~{fragments/alerts :: alerts}"></div>
 
-<hr>
+    <section class="hl-stat-grid">
+        <article class="hl-card hl-stat-card hl-stat-card-primary">
+            <div><div class="hl-stat-label">Total Donors</div><div class="hl-stat-value" th:text="${totalDonors}">0</div></div>
+            <div class="hl-stat-icon">♧</div>
+        </article>
+        <article class="hl-card hl-stat-card">
+            <div><div class="hl-stat-label">Awaiting Eligibility Review</div><div class="hl-stat-value" th:text="${pendingDonors}">0</div></div>
+            <div class="hl-stat-icon hl-icon-warning">◷</div>
+        </article>
+        <article class="hl-card hl-stat-card">
+            <div><div class="hl-stat-label">Eligible Donors</div><div class="hl-stat-value" th:text="${eligibleDonors}">0</div></div>
+            <div class="hl-stat-icon">✓</div>
+        </article>
+        <article class="hl-card hl-stat-card">
+            <div><div class="hl-stat-label">Ineligible Donors</div><div class="hl-stat-value" th:text="${ineligibleDonors}">0</div></div>
+            <div class="hl-stat-icon hl-icon-danger">!</div>
+        </article>
+        <article class="hl-card hl-stat-card">
+            <div><div class="hl-stat-label">Pending Blood Requests</div><div class="hl-stat-value" th:text="${pendingBloodRequests}">0</div></div>
+            <div class="hl-stat-icon hl-icon-info">＋</div>
+        </article>
+    </section>
 
-<h3>Donor Statistics</h3>
-
-<p>Total Donors:
-    <strong th:text="${totalDonors}">0</strong>
-</p>
-
-<p>Awaiting Review:
-    <strong th:text="${pendingDonors}">0</strong>
-</p>
-
-<p>Eligible Donors:
-    <strong th:text="${eligibleDonors}">0</strong>
-</p>
-
-<p>Ineligible Donors:
-    <strong th:text="${ineligibleDonors}">0</strong>
-</p>
-
-<p>
-    Pending Blood Requests:
-    <strong th:text="${pendingBloodRequests}">0</strong>
-</p>
-
-<hr>
-
-<a th:href="@{/admin/donors}">Manage Donor Eligibility</a>
-
-<br><br>
-
-<h3>Contact Disclosure Management</h3>
-
-<a th:href="@{/admin/disclosures}">
-    Review Contact Disclosure Requests
-</a>
-
-<br><br>
-
-<a th:href="@{/admin/blood-requests}">
-    Review Blood Requests
-</a>
-
-<br><br>
-
-<a th:href="@{/dashboard}">Back to Dashboard</a>
-
+    <section class="hl-admin-actions">
+        <article class="hl-card">
+            <div class="hl-card-header"><h2>Blood Request Review</h2><span class="hl-badge hl-badge-warning">Needs attention</span></div>
+            <p class="muted">Review submitted blood requests and approve or reject them with an appropriate reason.</p>
+            <a class="hl-button" th:href="@{/admin/blood-requests}">Manage Blood Requests</a>
+        </article>
+        <article class="hl-card">
+            <div class="hl-card-header"><h2>Donor Eligibility</h2><span class="hl-badge hl-badge-success">Donor management</span></div>
+            <p class="muted">Review donor profiles and record eligibility decisions.</p>
+            <a class="hl-button hl-button-secondary" th:href="@{/admin/donors}">Manage Donors</a>
+        </article>
+        <article class="hl-card">
+            <div class="hl-card-header"><h2>Contact Disclosures</h2><span class="hl-badge hl-badge-info">Privacy review</span></div>
+            <p class="muted">Review donor consent requests before contact information is shared with requesters.</p>
+            <a class="hl-button hl-button-secondary" th:href="@{/admin/disclosures}">Review Disclosures</a>
+        </article>
+    </section>
+</main>
 </body>
 </html>

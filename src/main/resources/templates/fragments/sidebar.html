@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside id="hlSidebar" th:fragment="sidebar(activePage)" class="hl-sidebar" aria-label="Main navigation">
+    <a class="hl-brand" th:href="@{/dashboard}">
+        <span class="hl-brand-mark" aria-hidden="true">♥</span>
+        <span>
+            <span class="hl-brand-name">HemoLink</span>
+            <span class="hl-brand-sub">BDFERS</span>
+        </span>
+    </a>
+
+    <div class="hl-nav-label">Main</div>
+    <nav class="hl-nav" aria-label="Main menu">
+        <a class="hl-nav-link" th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active' : ''" data-search="dashboard home">
+            <span class="hl-nav-icon">⌂</span><span>Dashboard</span>
+        </a>
+
+        <div sec:authorize="hasRole('USER')" class="hl-nav-group">
+            <a class="hl-nav-link" th:href="@{/requests/new}" th:classappend="${activePage == 'create-request'} ? ' active' : ''" data-search="create blood request">
+                <span class="hl-nav-icon">＋</span><span>Create Blood Request</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/requests}" th:classappend="${activePage == 'my-requests'} ? ' active' : ''" data-search="my requests blood">
+                <span class="hl-nav-icon">☷</span><span>My Requests</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/donor/requests}" th:classappend="${activePage == 'donor-requests'} ? ' active' : ''" data-search="donor matched requests">
+                <span class="hl-nav-icon">♧</span><span>Matched Requests</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/donor/profile}" th:classappend="${activePage == 'donor-profile'} ? ' active' : ''" data-search="donor profile eligibility">
+                <span class="hl-nav-icon">♙</span><span>Donor Profile</span>
+            </a>
+        </div>
+
+        <div sec:authorize="hasRole('ADMIN')" class="hl-nav-group">
+            <a class="hl-nav-link" th:href="@{/admin/dashboard}" th:classappend="${activePage == 'admin-dashboard'} ? ' active' : ''" data-search="admin dashboard overview">
+                <span class="hl-nav-icon">▦</span><span>Admin Dashboard</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/admin/blood-requests}" th:classappend="${activePage == 'admin-requests'} ? ' active' : ''" data-search="review blood requests approvals">
+                <span class="hl-nav-icon">＋</span><span>Blood Requests</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/admin/donors}" th:classappend="${activePage == 'admin-donors'} ? ' active' : ''" data-search="donors eligibility review">
+                <span class="hl-nav-icon">♧</span><span>Donor Management</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/admin/disclosures}" th:classappend="${activePage == 'admin-disclosures'} ? ' active' : ''" data-search="contact disclosure approvals">
+                <span class="hl-nav-icon">▤</span><span>Contact Disclosures</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="hl-sidebar-divider"></div>
+    <div class="hl-nav-label">Account</div>
+    <nav class="hl-nav" aria-label="Account menu">
+        <a class="hl-nav-link" th:href="@{/dashboard}" data-search="account profile settings">
+            <span class="hl-nav-icon">⚙</span><span>Account</span>
+        </a>
+        <form th:action="@{/logout}" method="post" class="hl-logout-form">
+            <button class="hl-nav-link hl-nav-logout" type="submit">
+                <span class="hl-nav-icon">↪</span><span>Logout</span>
+            </button>
+        </form>
+    </nav>
+    <div class="hl-sidebar-footer">HemoLink · Blood Donor Finder &amp; Emergency Request System</div>
+</aside>
+</body>
+</html>
