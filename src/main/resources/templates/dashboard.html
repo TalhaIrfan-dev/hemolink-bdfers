@@ -143,16 +143,24 @@
                     <th:block th:replace="~{fragments/ui :: empty('bell', 'No activity yet', 'Updates about your requests and matches will appear here.')}"></th:block>
                 </div>
 
-                <ol class="hl-timeline" th:unless="${#lists.isEmpty(rd.recentActivity)}">
-                    <li class="hl-timeline-item" th:each="n : ${rd.recentActivity}"
-                        th:classappend="${@display.notificationTone(n.type)}">
-                        <span class="hl-timeline-icon"><th:block th:replace="~{fragments/icons :: icon(${@display.notificationIcon(n.type)})}"></th:block></span>
-                        <div>
-                            <div class="hl-timeline-title" th:text="${n.message}">Message</div>
-                            <div class="hl-timeline-time" th:text="${@display.relative(n.createdAt)}">10 minutes ago</div>
-                        </div>
-                    </li>
-                </ol>
+                
+            <ol class="hl-timeline" th:unless="${#lists.isEmpty(rd.recentActivity)}">
+                <li class="hl-timeline-item"
+                    th:each="n : ${rd.recentActivity}"
+                    th:classappend="${@display.notificationTone(n.type)}">
+
+                    <span class="hl-timeline-icon">
+                        <th:block th:replace="~{fragments/icons :: icon('bell')}"></th:block>
+                    </span>
+
+                    <div>
+                        <div class="hl-timeline-title" th:text="${n.message}">Message</div>
+                        <div class="hl-timeline-time"
+                            th:text="${@display.relative(n.createdAt)}">10 minutes ago</div>
+                    </div>
+                </li>
+            </ol>
+
             </section>
         </div>
     </div>
@@ -368,7 +376,7 @@
         </th:block>
     </section>
 
-    <th:block th:replace="~{fragments/head :: chartScripts}"></th:block>
+    <!-- <th:block th:replace="~{fragments/head :: chartScripts}"></th:block> -->
 </main>
 </body>
 </html>
