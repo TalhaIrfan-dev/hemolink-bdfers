@@ -1,0 +1,16 @@
+package com.hemolink.bdfers.dto.response;
+
+/** A label with a count, e.g. "A+" with 7 requests (donut chart data). */
+public class LabelCount {
+
+    private final String label;
+    private final long count;
+
+    public LabelCount(String label, long count) {
+        this.label = label;
+        this.count = count;
+    }
+
+    public String getLabel() { return label; }
+    public long getCount() { return count; }
+}
