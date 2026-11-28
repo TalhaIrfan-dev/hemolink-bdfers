@@ -49,7 +49,8 @@ public class BloodRequestController {
 
         var saved = bloodRequestService.createRequest(request, userDetails.getUsername());
 
-        redirectAttributes.addFlashAttribute("successMessage",
+        redirectAttributes.addFlashAttribute(
+                "successMessage",
                 request.getUrgency() == RequestUrgency.CRITICAL
                         ? "Critical blood request submitted. Matching has started."
                         : "Blood request submitted. Matching starts after an administrator approves it.");
@@ -100,7 +101,8 @@ public class BloodRequestController {
         try {
             bloodRequestService.closeRequest(id, userDetails.getUsername(), reason);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Your blood request has been closed.");
+            redirectAttributes.addFlashAttribute(
+                    "successMessage", "Your blood request has been closed.");
 
         } catch (IllegalArgumentException | IllegalStateException exception) {
 
