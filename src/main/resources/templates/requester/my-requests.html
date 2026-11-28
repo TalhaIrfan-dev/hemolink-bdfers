@@ -1,192 +1,117 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blood Requests | HemoLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            padding: 30px;
-            color: #222;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .request-card {
-            background: white;
-            padding: 20px;
-            margin: 18px 0;
-            border-radius: 9px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-        }
-
-        .request-card p { margin: 9px 0; }
-
-        .status {
-            font-weight: bold;
-            color: #b42332;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 15px;
-            background: #b42332;
-            color: white;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .close-button {
-            background: #555;
-            margin-top: 10px;
-        }
-
-        .message {
-            background: #e6f4ea;
-            padding: 12px;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-
-        .error {
-            background: #fde8e8;
-            padding: 12px;
-            border-radius: 5px;
-            margin: 15px 0;
-            color: #a11;
-        }
-
-        .empty {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-    </style>
-</head>
+<!--
+    My Requests (Module 3.4, FR-08). Status tabs are filtered on the server:
+    ?tab=all|active|completed|closed.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('My Requests', 'my-requests', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<div class="container">
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">My Requests</li>
+    </ol>
 
-    <div class="header">
+    <div class="hl-page-heading">
         <div>
-            <h2>My Blood Requests</h2>
-            <p>View and manage your submitted requests.</p>
+            <h1>My Requests</h1>
+            <p>Track your blood requests, their matching progress and donor replies.</p>
         </div>
-
-        <a class="button" th:href="@{/requests/new}">
-            Create New Request
-        </a>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button hl-button-lg" th:href="@{/requests/new}">
+                <th:block th:replace="~{fragments/icons :: icon('plus')}"></th:block>Create Blood Request
+            </a>
+        </div>
     </div>
 
-    <div class="message" th:if="${param.success}">
-        Blood request submitted successfully.
-    </div>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-    <div class="message" th:if="${param.closed}">
-        Blood request closed successfully.
-    </div>
+    <section class="hl-card" aria-labelledby="listTitle">
+        <h2 id="listTitle" class="hl-visually-hidden">Your blood requests</h2>
 
-    <div class="error" th:if="${errorMessage}"
-         th:text="${errorMessage}">
-    </div>
+        <th:block th:if="${view.noRequestsAtAll}">
+            <th:block th:replace="~{fragments/ui :: empty('drop', 'No blood requests yet', 'When you need blood, create a request and compatible donors in your city are matched automatically.')}"></th:block>
+            <div class="hl-action-row hl-center">
+                <a class="hl-button" th:href="@{/requests/new}">Create your first blood request</a>
+            </div>
+        </th:block>
 
-    <div th:if="${#lists.isEmpty(requests)}" class="empty">
-        <h3>No blood requests found</h3>
-        <p>You have not submitted any blood requests yet.</p>
-    </div>
+        <th:block th:unless="${view.noRequestsAtAll}">
+            <div class="hl-card-header">
+                <nav class="hl-tabs hl-tabs--scroll" aria-label="Filter by status">
+                    <a th:each="t : ${view.tabs}" class="hl-tab"
+                       th:href="@{/requests(tab=${t.param})}"
+                       th:classappend="${view.tab == t} ? 'active'"
+                       th:attr="aria-current=${view.tab == t} ? 'page'">
+                        <span th:text="${t.label}">All</span>
+                        <span class="hl-tab-count" th:text="${view.count(t)}">0</span>
+                    </a>
+                </nav>
+            </div>
 
-    <div th:each="request : ${requests}" class="request-card">
+            <th:block th:if="${#lists.isEmpty(view.requests)}">
+                <th:block th:replace="~{fragments/ui :: empty('list', 'No requests in this tab', 'Choose another tab to see your other requests.')}"></th:block>
+            </th:block>
 
-        <h3>
-            Request #<span th:text="${request.id}"></span>
-        </h3>
-
-        <p>
-            <strong>Blood Group:</strong>
-            <span th:text="${#strings.replace(request.bloodGroup.name(), '_', ' ')}"></span>
-        </p>
-
-        <p>
-            <strong>Units Required:</strong>
-            <span th:text="${request.unitsRequired}"></span>
-        </p>
-
-        <p>
-            <strong>Fulfilled Units:</strong>
-            <span th:text="${request.fulfilledUnits}"></span>
-        </p>
-
-        <p>
-            <strong>City:</strong>
-            <span th:text="${request.city}"></span>
-        </p>
-
-        <p>
-            <strong>Hospital:</strong>
-            <span th:text="${request.hospitalName}"></span>
-        </p>
-
-        <p>
-            <strong>Required At:</strong>
-            <span th:text="${#temporals.format(request.requiredAt, 'dd MMM yyyy HH:mm')}"></span>
-        </p>
-
-        <p>
-            <strong>Urgency:</strong>
-            <span th:text="${request.urgency}"></span>
-        </p>
-
-        <p>
-            <strong>Admin Status:</strong>
-            <span class="status" th:text="${request.adminStatus}"></span>
-        </p>
-
-        <p>
-            <strong>Matching Status:</strong>
-            <span th:text="${request.matchingStatus}"></span>
-        </p>
-
-        <a class="button"
-            th:href="@{/requests/{id}/matches(id=${request.id})}">
-            View Potential Donors
-        </a>
-
-        <a class="button" th:href="@{/requests/{id}/matches/contacts(id=${request.id})}">
-            View Approved Donor Contacts
-        </a>
-
-        <form th:if="${request.adminStatus.name() == 'PENDING'
-                       or request.adminStatus.name() == 'APPROVED'}"
-              th:action="@{/requests/{id}/close(id=${request.id})}"
-              method="post">
-
-            <button type="submit" class="button close-button">
-                Close Request
-            </button>
-        </form>
-
-    </div>
-
-    <p><a th:href="@{/dashboard}">Back to Dashboard</a></p>
-
-</div>
-
+            <div class="hl-table-wrap" th:unless="${#lists.isEmpty(view.requests)}">
+                <table class="hl-table hl-table--stack">
+                    <thead>
+                    <tr>
+                        <th scope="col">Request</th>
+                        <th scope="col">Blood Group</th>
+                        <th scope="col">Units donated</th>
+                        <th scope="col">Hospital</th>
+                        <th scope="col">Needed by</th>
+                        <th scope="col">Urgency</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="hl-visually-hidden">Actions</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${view.requests}"
+                        th:with="done=${r.fulfilledUnits == null ? 0 : r.fulfilledUnits},
+                                 pct=${r.unitsRequired == null or r.unitsRequired == 0 ? 0 : (done * 100 / r.unitsRequired > 100 ? 100 : done * 100 / r.unitsRequired)}">
+                        <td data-label="Request"><div>
+                            <a class="hl-strong-link" th:href="@{/requests/{id}(id=${r.id})}"
+                               th:text="${@display.requestId(r.id)}">REQ-0001</a>
+                            <span class="hl-table-sub" th:text="${'Created ' + @display.relative(r.createdAt)}">Created today</span>
+                        </div></td>
+                        <td data-label="Blood Group"><span class="hl-blood" th:text="${r.bloodGroup.label}">A+</span></td>
+                        <td data-label="Units donated">
+                            <div class="hl-units">
+                                <span th:text="${done + ' of ' + r.unitsRequired}">0 of 2</span>
+                                <div class="hl-progress hl-progress--sm" role="progressbar"
+                                     th:attr="aria-valuenow=${pct},aria-label=${'Units donated for ' + @display.requestId(r.id)}"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    <span th:style="${'width:' + pct + '%'}"></span>
+                                </div>
+                            </div>
+                        </td>
+                        <td data-label="Hospital"><div>
+                            <span th:text="${r.hospitalName}">Hospital</span>
+                            <span class="hl-table-sub" th:text="${r.city}">City</span>
+                        </div></td>
+                        <td data-label="Needed by" th:text="${@display.dateTime(r.requiredAt)}">28 Nov 2026, 14:30</td>
+                        <td data-label="Urgency"><th:block th:replace="~{fragments/ui :: urgencyPill(${r.urgency})}"></th:block></td>
+                        <td data-label="Status"><span class="hl-pill" th:classappend="${@display.stageClass(r)}" th:text="${@display.stageLabel(r)}">Matching</span></td>
+                        <td data-label="">
+                            <div class="hl-table-actions">
+                                <a class="hl-button hl-button-secondary hl-button-sm"
+                                   th:href="@{/requests/{id}/matches(id=${r.id})}"
+                                   th:attr="aria-label=${'Matching results for ' + @display.requestId(r.id)}">Donors</a>
+                                <a class="hl-icon-button" th:href="@{/requests/{id}(id=${r.id})}"
+                                   th:attr="aria-label=${'Open ' + @display.requestId(r.id)}">
+                                    <th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </th:block>
+    </section>
+</main>
 </body>
 </html>

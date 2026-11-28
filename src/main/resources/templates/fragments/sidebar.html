@@ -1,61 +1,101 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+<!--
+    Main navigation (Module 3.1). activePage marks the current link.
+    Regular users see requester and donor pages; administrators see admin pages.
+-->
 <aside id="hlSidebar" th:fragment="sidebar(activePage)" class="hl-sidebar" aria-label="Main navigation">
     <a class="hl-brand" th:href="@{/dashboard}">
-        <span class="hl-brand-mark" aria-hidden="true">♥</span>
+        <th:block th:replace="~{fragments/icons :: logo}"></th:block>
         <span>
             <span class="hl-brand-name">HemoLink</span>
             <span class="hl-brand-sub">BDFERS</span>
         </span>
     </a>
 
-    <div class="hl-nav-label">Main</div>
-    <nav class="hl-nav" aria-label="Main menu">
-        <a class="hl-nav-link" th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active' : ''" data-search="dashboard home">
-            <span class="hl-nav-icon">⌂</span><span>Dashboard</span>
-        </a>
+    <!-- ===================== Regular users ===================== -->
+    <th:block sec:authorize="hasRole('USER')">
+        <div class="hl-nav-label">Main</div>
+        <nav class="hl-nav" aria-label="Main menu">
+            <a class="hl-nav-link" th:href="@{/dashboard}" th:classappend="${activePage == 'dashboard'} ? ' active'"
+               th:attr="aria-current=${activePage == 'dashboard'} ? 'page'" data-search="dashboard home">
+                <th:block th:replace="~{fragments/icons :: icon('home')}"></th:block><span>Dashboard</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/requests/new}" th:classappend="${activePage == 'create-request'} ? ' active'"
+               th:attr="aria-current=${activePage == 'create-request'} ? 'page'" data-search="create blood request new">
+                <th:block th:replace="~{fragments/icons :: icon('plus-square')}"></th:block><span>Create Request</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/requests}" th:classappend="${activePage == 'my-requests'} ? ' active'"
+               th:attr="aria-current=${activePage == 'my-requests'} ? 'page'" data-search="my requests blood matching">
+                <th:block th:replace="~{fragments/icons :: icon('list')}"></th:block><span>My Requests</span>
+            </a>
+            <a class="hl-nav-link" th:href="@{/requests/donor-availability}" th:classappend="${activePage == 'donor-availability'} ? ' active'"
+               th:attr="aria-current=${activePage == 'donor-availability'} ? 'page'" data-search="donor availability blood group city">
+                <th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span>Donor Availability</span>
+            </a>
+        </nav>
 
-        <div sec:authorize="hasRole('USER')" class="hl-nav-group">
-            <a class="hl-nav-link" th:href="@{/requests/new}" th:classappend="${activePage == 'create-request'} ? ' active' : ''" data-search="create blood request">
-                <span class="hl-nav-icon">＋</span><span>Create Blood Request</span>
+        <div class="hl-nav-label">Donor</div>
+        <nav class="hl-nav" aria-label="Donor menu">
+            <a class="hl-nav-link" th:href="@{/donor/requests}" th:classappend="${activePage == 'donor-requests'} ? ' active'"
+               th:attr="aria-current=${activePage == 'donor-requests'} ? 'page'" data-search="matched requests donor accept">
+                <th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block><span>Matched Requests</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/requests}" th:classappend="${activePage == 'my-requests'} ? ' active' : ''" data-search="my requests blood">
-                <span class="hl-nav-icon">☷</span><span>My Requests</span>
+            <a class="hl-nav-link" th:href="@{/donor/profile}" th:classappend="${activePage == 'donor-profile'} ? ' active'"
+               th:attr="aria-current=${activePage == 'donor-profile'} ? 'page'" data-search="donor profile availability guidance">
+                <th:block th:replace="~{fragments/icons :: icon('user')}"></th:block><span>Donor Profile</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/donor/requests}" th:classappend="${activePage == 'donor-requests'} ? ' active' : ''" data-search="donor matched requests">
-                <span class="hl-nav-icon">♧</span><span>Matched Requests</span>
+            <a class="hl-nav-link" th:href="@{/donor/history}" th:classappend="${activePage == 'donor-history'} ? ' active'"
+               th:attr="aria-current=${activePage == 'donor-history'} ? 'page'" data-search="donation history">
+                <th:block th:replace="~{fragments/icons :: icon('history')}"></th:block><span>Donation History</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/donor/profile}" th:classappend="${activePage == 'donor-profile'} ? ' active' : ''" data-search="donor profile eligibility">
-                <span class="hl-nav-icon">♙</span><span>Donor Profile</span>
-            </a>
-        </div>
+        </nav>
+    </th:block>
 
-        <div sec:authorize="hasRole('ADMIN')" class="hl-nav-group">
-            <a class="hl-nav-link" th:href="@{/admin/dashboard}" th:classappend="${activePage == 'admin-dashboard'} ? ' active' : ''" data-search="admin dashboard overview">
-                <span class="hl-nav-icon">▦</span><span>Admin Dashboard</span>
+    <!-- ===================== Administrators ===================== -->
+    <th:block sec:authorize="hasRole('ADMIN')">
+        <div class="hl-nav-label">Administration</div>
+        <nav class="hl-nav" aria-label="Administration menu">
+            <a class="hl-nav-link" th:href="@{/admin/dashboard}" th:classappend="${activePage == 'admin-dashboard'} ? ' active'"
+               th:attr="aria-current=${activePage == 'admin-dashboard'} ? 'page'" data-search="admin dashboard overview">
+                <th:block th:replace="~{fragments/icons :: icon('home')}"></th:block><span>Dashboard</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/admin/blood-requests}" th:classappend="${activePage == 'admin-requests'} ? ' active' : ''" data-search="review blood requests approvals">
-                <span class="hl-nav-icon">＋</span><span>Blood Requests</span>
+            <a class="hl-nav-link" th:href="@{/admin/blood-requests}" th:classappend="${activePage == 'admin-requests'} ? ' active'"
+               th:attr="aria-current=${activePage == 'admin-requests'} ? 'page'" data-search="blood requests review approve reject close">
+                <th:block th:replace="~{fragments/icons :: icon('clipboard')}"></th:block><span>Blood Requests</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/admin/donors}" th:classappend="${activePage == 'admin-donors'} ? ' active' : ''" data-search="donors eligibility review">
-                <span class="hl-nav-icon">♧</span><span>Donor Management</span>
+            <a class="hl-nav-link" th:href="@{/admin/donors}" th:classappend="${activePage == 'admin-donors'} ? ' active'"
+               th:attr="aria-current=${activePage == 'admin-donors'} ? 'page'" data-search="donor directory deactivate">
+                <th:block th:replace="~{fragments/icons :: icon('users')}"></th:block><span>Donor Directory</span>
             </a>
-            <a class="hl-nav-link" th:href="@{/admin/disclosures}" th:classappend="${activePage == 'admin-disclosures'} ? ' active' : ''" data-search="contact disclosure approvals">
-                <span class="hl-nav-icon">▤</span><span>Contact Disclosures</span>
+            <a class="hl-nav-link" th:href="@{/admin/disclosures}" th:classappend="${activePage == 'admin-disclosures'} ? ' active'"
+               th:attr="aria-current=${activePage == 'admin-disclosures'} ? 'page'" data-search="contact disclosure log">
+                <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block><span>Disclosure Log</span>
             </a>
-        </div>
-    </nav>
+            <a class="hl-nav-link" th:href="@{/admin/guidance-settings}" th:classappend="${activePage == 'admin-guidance'} ? ' active'"
+               th:attr="aria-current=${activePage == 'admin-guidance'} ? 'page'" data-search="donation guidance settings haemoglobin">
+                <th:block th:replace="~{fragments/icons :: icon('settings')}"></th:block><span>Guidance Settings</span>
+            </a>
+        </nav>
+    </th:block>
 
+    <!-- ===================== Everyone ===================== -->
     <div class="hl-sidebar-divider"></div>
-    <div class="hl-nav-label">Account</div>
+    <div class="hl-nav-label">More</div>
     <nav class="hl-nav" aria-label="Account menu">
-        <a class="hl-nav-link" th:href="@{/dashboard}" data-search="account profile settings">
-            <span class="hl-nav-icon">⚙</span><span>Account</span>
+        <a class="hl-nav-link" th:href="@{/notifications}" th:classappend="${activePage == 'notifications'} ? ' active'"
+           th:attr="aria-current=${activePage == 'notifications'} ? 'page'" data-search="notifications alerts">
+            <th:block th:replace="~{fragments/icons :: icon('bell')}"></th:block><span>Notifications</span>
+            <span class="hl-nav-badge" th:if="${unreadNotificationCount > 0}" th:text="${unreadNotificationCount}">2</span>
+        </a>
+        <a class="hl-nav-link" th:href="@{/account}" th:classappend="${activePage == 'account'} ? ' active'"
+           th:attr="aria-current=${activePage == 'account'} ? 'page'" data-search="account settings password phone">
+            <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block><span>Account Settings</span>
         </a>
         <form th:action="@{/logout}" method="post" class="hl-logout-form">
             <button class="hl-nav-link hl-nav-logout" type="submit">
-                <span class="hl-nav-icon">↪</span><span>Logout</span>
+                <th:block th:replace="~{fragments/icons :: icon('logout')}"></th:block><span>Logout</span>
             </button>
         </form>
     </nav>

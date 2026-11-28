@@ -1,348 +1,184 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Matched Requests | HemoLink</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            color: #222;
-            padding: 25px;
-        }
-
-        .container {
-            max-width: 950px;
-            margin: auto;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 18px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-        }
-
-        .button {
-            padding: 9px 14px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px 7px 5px 0;
-        }
-
-        .accept { background: #16834a; color: white; }
-        .decline { background: #b42332; color: white; }
-        .consent { background: #175cd3; color: white; }
-        .report { background: #087e8b; color: white; }
-
-        .message {
-            padding: 12px;
-            background: #e6f4ea;
-            margin-bottom: 12px;
-        }
-
-        .error {
-            padding: 12px;
-            background: #fee4e2;
-            margin-bottom: 12px;
-        }
-
-        .notice {
-            background: #fff4e5;
-            padding: 12px;
-            border-radius: 5px;
-            margin-top: 12px;
-        }
-
-        .report-section {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-        }
-
-        .form-group {
-            margin: 12px 0;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            max-width: 350px;
-            padding: 9px;
-            box-sizing: border-box;
-        }
-
-        .empty {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-        }
-    </style>
-</head>
-
+<!--
+    Matched Requests (Module 3.5, FR-13/FR-14/FR-15/FR-18).
+    Rows come from DonorRequestRow: no requester identity is available here.
+    Every action is checked again on the server.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Matched Requests', 'donor-requests', ~{::main})}">
 <body>
-<div class="container">
+<main id="main" class="hl-page-content">
 
-    <h1>HemoLink</h1>
-    <h2>My Matched Blood Requests</h2>
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Matched Requests</li>
+    </ol>
 
-    <p th:if="${successMessage}"
-       class="message"
-       th:text="${successMessage}"></p>
-
-    <p th:if="${errorMessage}"
-       class="error"
-       th:text="${errorMessage}"></p>
-
-    <div th:if="${#lists.isEmpty(matches)}" class="empty">
-        <h3>No matched requests</h3>
-        <p>
-            There are currently no blood requests matching your
-            eligible and available donor profile.
-        </p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Matched Requests</h1>
+            <p>Blood requests in your city that your blood group can help. You decide whether to accept.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button hl-button-secondary" th:href="@{/donor/history}">
+                <th:block th:replace="~{fragments/icons :: icon('history')}"></th:block>Donation History
+            </a>
+        </div>
     </div>
 
-    <div th:each="match : ${matches}" class="card">
+    <th:block th:replace="~{fragments/ui :: deactivationNotice(${deactivationNotice})}"></th:block>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-        <h3>
-            Blood Request #
-            <span th:text="${match.bloodRequest.id}"></span>
-        </h3>
-
-        <p>
-            <strong>Blood Group:</strong>
-            <span th:text="${match.bloodRequest.bloodGroup}"></span>
-        </p>
-
-        <p>
-            <strong>Units Required:</strong>
-            <span th:text="${match.bloodRequest.unitsRequired}"></span>
-        </p>
-
-        <p>
-            <strong>City:</strong>
-            <span th:text="${match.bloodRequest.city}"></span>
-        </p>
-
-        <p>
-            <strong>Hospital:</strong>
-            <span th:text="${match.bloodRequest.hospitalName}"></span>
-        </p>
-
-        <p>
-            <strong>Required At:</strong>
-            <span th:text="${#temporals.format(
-                match.bloodRequest.requiredAt, 'dd MMM yyyy HH:mm')}"></span>
-        </p>
-
-        <p>
-            <strong>Urgency:</strong>
-            <span th:text="${match.bloodRequest.urgency}"></span>
-        </p>
-
-        <p>
-            <strong>Request Status:</strong>
-            <span th:text="${match.bloodRequest.adminStatus}"></span>
-        </p>
-
-        <hr>
-
-        <p>
-            <strong>Your Response:</strong>
-            <span th:text="${match.donorResponse}"></span>
-        </p>
-
-        <!-- Accept / Decline -->
-        <div th:if="${match.donorResponse.name() == 'PENDING'
-        and match.bloodRequest.adminStatus.name() != 'CLOSED'
-        and match.bloodRequest.adminStatus.name() != 'REJECTED'
-        and match.bloodRequest.adminStatus.name() != 'FULFILLED'}">
-
-            <form th:action="@{/donor/requests/{id}/respond(id=${match.id})}"
-                  method="post"
-                  style="display:inline;">
-
-                <input type="hidden" name="response" value="ACCEPTED">
-
-                <button class="button accept" type="submit">
-                    Accept Request
-                </button>
-            </form>
-
-            <form th:action="@{/donor/requests/{id}/respond(id=${match.id})}"
-                  method="post"
-                  style="display:inline;">
-
-                <input type="hidden" name="response" value="DECLINED">
-
-                <button class="button decline" type="submit">
-                    Decline Request
-                </button>
-            </form>
+    <section class="hl-card" th:if="${view.noMatchesAtAll}">
+        <th:block th:replace="~{fragments/ui :: empty('drop', 'No matched requests yet', 'When someone in your city needs a blood group you can give to, the request appears here and you get a notification.')}"></th:block>
+        <div class="hl-action-row hl-center">
+            <a class="hl-button hl-button-secondary" th:href="@{/donor/profile}">Check my donor profile</a>
         </div>
+    </section>
 
-        <!-- Contact-sharing consent -->
-        <div th:if="${match.donorResponse.name() == 'ACCEPTED'}">
+    <th:block th:unless="${view.noMatchesAtAll}">
+        <nav class="hl-tabs hl-tabs--scroll hl-tabs--page" aria-label="Filter matched requests">
+            <a th:each="t : ${view.tabs}" class="hl-tab"
+               th:href="@{/donor/requests(tab=${t.param})}"
+               th:classappend="${view.tab == t} ? 'active'"
+               th:attr="aria-current=${view.tab == t} ? 'page'">
+                <span th:text="${t.label}">Waiting for reply</span>
+                <span class="hl-tab-count" th:text="${view.count(t)}">0</span>
+            </a>
+        </nav>
 
-            <p>
-                <strong>Contact Sharing Consent:</strong>
-                <span th:text="${match.donorConsent ? 'Given' : 'Not given'}"></span>
-            </p>
+        <section class="hl-card" th:if="${#lists.isEmpty(view.rows)}">
+            <th:block th:if="${view.tab.name() == 'WAITING'}">
+                <th:block th:replace="~{fragments/ui :: empty('check-circle', 'Nothing waiting for your reply', 'You have answered every active request. New matches appear here.')}"></th:block>
+            </th:block>
+            <th:block th:if="${view.tab.name() == 'ACCEPTED'}">
+                <th:block th:replace="~{fragments/ui :: empty('heart', 'No accepted requests', 'Requests you accept appear here until they end.')}"></th:block>
+            </th:block>
+            <th:block th:if="${view.tab.name() == 'PAST'}">
+                <th:block th:replace="~{fragments/ui :: empty('history', 'No past requests', 'Requests you declined, and requests that have ended, appear here.')}"></th:block>
+            </th:block>
+        </section>
 
-            <div th:if="${!match.donorConsent
-                 and match.bloodRequest.adminStatus.name() != 'CLOSED'
-                 and match.bloodRequest.adminStatus.name() != 'REJECTED'
-                 and match.bloodRequest.adminStatus.name() != 'FULFILLED'}"
-                 class="notice">
+        <ul class="hl-request-list" th:unless="${#lists.isEmpty(view.rows)}">
+            <li class="hl-card hl-match-card" th:each="row : ${view.rows}"
+                th:classappend="${row.critical and row.requestActive} ? 'is-critical'">
 
-                <p>
-                    By selecting the button below, you explicitly consent
-                    to sharing your registered contact number with the
-                    requester, subject to administrator approval.
+                <div class="hl-match-head">
+                    <span class="hl-blood hl-blood--lg" th:text="${row.bloodGroupLabel}">A+</span>
+                    <div class="hl-match-title">
+                        <h2>
+                            <span th:text="${row.hospitalName}">Hospital</span>
+                            <span class="hl-pill" th:classappend="${row.critical} ? 'hl-pill--critical' : 'hl-pill--normal'">
+                                <th:block th:if="${row.critical}"><th:block th:replace="~{fragments/icons :: icon('bolt')}"></th:block></th:block>
+                                <span th:text="${row.urgencyLabel}">Critical</span>
+                            </span>
+                        </h2>
+                        <p class="hl-meta-row">
+                            <strong th:text="${@display.requestId(row.requestId)}">REQ-0001</strong>
+                            <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${row.city}">City</span></span>
+                            <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('clock')}"></th:block><span th:text="${'Needed by ' + @display.dateTime(row.requiredAt)}">Needed by 28 Nov, 14:30</span></span>
+                        </p>
+                    </div>
+                    <span class="hl-pill"
+                          th:classappend="${row.requestActive} ? ${'hl-pill--' + #strings.toLowerCase(row.responseName)} : 'hl-pill--closed'"
+                          th:text="${row.requestActive ? row.responseLabel : row.requestStatusLabel}">Awaiting response</span>
+                </div>
+
+                <dl class="hl-match-facts">
+                    <div><dt>Units needed</dt><dd th:text="${row.unitsRequired}">2</dd></div>
+                    <div><dt>Still needed</dt><dd th:text="${row.unitsRemaining}">1</dd></div>
+                    <div><dt>Your reply</dt><dd th:text="${row.responseLabel}">Awaiting response</dd></div>
+                    <div><dt>Matched</dt><dd th:text="${row.matchedAt != null ? @display.relative(row.matchedAt) : '-'}">Today</dd></div>
+                </dl>
+
+                <!-- Accept (opens the advisory health check, D-01) or decline -->
+                <div class="hl-match-actions" th:if="${row.canRespond}">
+                    <a class="hl-button" th:href="@{/donor/requests/{id}/accept(id=${row.matchId})}">
+                        <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>Accept
+                    </a>
+                    <form th:action="@{/donor/requests/{id}/respond(id=${row.matchId})}" method="post"
+                          data-confirm="Decline this blood request? You cannot accept it later."
+                          data-confirm-button="Decline">
+                        <input type="hidden" name="response" value="DECLINED">
+                        <button class="hl-button hl-button-secondary" type="submit">Decline</button>
+                    </form>
+                    <span class="hl-field-hint">Accepting asks a few health questions first. The advice is guidance only.</span>
+                </div>
+
+                <!-- Contact sharing (D-16): accepted + explicit consent, no admin approval -->
+                <div class="hl-consent-box" th:if="${row.canShareContact}">
+                    <div>
+                        <strong>Share your contact details?</strong>
+                        <p>The requester will see your <strong>name and phone number</strong> straight away,
+                            for as long as this request stays active. Nothing else about you is shared.</p>
+                    </div>
+                    <form th:action="@{/donor/requests/{id}/consent(id=${row.matchId})}" method="post"
+                          data-confirm="Share your name and phone number with this requester?"
+                          data-confirm-button="Share my details">
+                        <button class="hl-button" type="submit">
+                            <th:block th:replace="~{fragments/icons :: icon('phone')}"></th:block>Share my name and phone
+                        </button>
+                    </form>
+                </div>
+                <p class="hl-inline-status is-shared" th:if="${row.consentGiven and row.requestActive}">
+                    <th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block>
+                    <span th:text="${'Contact details shared' + (row.consentAt != null ? ' ' + #strings.toLowerCase(@display.relative(row.consentAt)) : '') + '. They are hidden again when the request ends.'}">Contact details shared.</span>
+                </p>
+                <p class="hl-inline-status" th:if="${row.responseName == 'ACCEPTED' and !row.consentGiven and row.requestActive and !row.canShareContact}">
+                    <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>
+                    <span>Your contact details are private.</span>
                 </p>
 
-                <form th:action="@{/donor/requests/{id}/consent(id=${match.id})}"
-                      method="post">
+                <!-- Donation outcome (FR-18) -->
+                <details class="hl-report" th:if="${row.canReport}">
+                    <summary>
+                        <th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block>Report donation outcome
+                    </summary>
+                    <p class="hl-field-hint">Accepting does not mean a donation happened. Tell us once it has, or if it did not take place.</p>
+                    <form th:action="@{/donor/requests/{id}/donation-report(id=${row.matchId})}" method="post"
+                          class="hl-report-form" data-outcome-form>
+                        <div class="hl-field">
+                            <label th:for="${'outcome-' + row.matchId}">Outcome</label>
+                            <select class="hl-select" name="outcome" th:id="${'outcome-' + row.matchId}" required>
+                                <option value="">Select outcome</option>
+                                <option value="COMPLETED">Donation completed</option>
+                                <option value="NOT_OCCURRED">Donation did not take place</option>
+                            </select>
+                        </div>
+                        <div class="hl-report-fields" data-completed-fields>
+                            <div class="hl-field">
+                                <label th:for="${'units-' + row.matchId}">Units donated</label>
+                                <input class="hl-input" type="number" name="unitsDonated" min="1" step="1"
+                                       th:id="${'units-' + row.matchId}" th:attr="max=${row.unitsRemaining > 0 ? row.unitsRemaining : null}">
+                            </div>
+                            <div class="hl-field">
+                                <label th:for="${'date-' + row.matchId}">Donation date</label>
+                                <input class="hl-input" type="date" name="donationDate"
+                                       th:id="${'date-' + row.matchId}" th:attr="max=${today}">
+                            </div>
+                        </div>
+                        <div>
+                            <button class="hl-button" type="submit">Submit report</button>
+                        </div>
+                    </form>
+                </details>
+                <p class="hl-inline-status is-shared" th:if="${row.reported}">
+                    <th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block>
+                    <span>You have reported the outcome for this request.</span>
+                </p>
 
-                    <button class="button consent" type="submit">
-                        I Consent to Share My Contact
-                    </button>
-                </form>
-            </div>
+                <p class="hl-inline-status" th:if="${!row.requestActive}">
+                    <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+                    <span th:text="${'This request is ' + #strings.toLowerCase(row.requestStatusLabel) + '. No further action is needed.'}">This request has ended.</span>
+                </p>
+            </li>
+        </ul>
 
-            <p th:if="${match.donorConsent}">
-                Your consent has been recorded. Contact information
-                remains hidden until an administrator approves disclosure.
-            </p>
-        </div>
-
-        <!-- Donation outcome reporting -->
-        <div class="report-section"
-        th:if="${match.donorResponse.name() == 'ACCEPTED'
-            and match.bloodRequest.adminStatus.name() != 'CLOSED'
-            and match.bloodRequest.adminStatus.name() != 'REJECTED'
-            and match.bloodRequest.adminStatus.name() != 'FULFILLED'
-            and !reportedMatchIds.contains(match.id)}">
-
-            <h4>Report Donation Outcome</h4>
-
-            <p>
-                After responding to the request, report whether the
-                donation actually took place. Accepting a request does
-                not automatically mean that a donation was completed.
-            </p>
-
-            <form th:action="@{/donor/requests/{id}/donation-report(id=${match.id})}"
-                  method="post"
-                  class="donation-report-form">
-
-                <div class="form-group">
-                    <label>Donation Outcome</label>
-
-                    <select name="outcome"
-                            class="outcome-select"
-                            required>
-
-                        <option value="">Select outcome</option>
-                        <option value="COMPLETED">Donation Completed</option>
-                        <option value="NOT_OCCURRED">Donation Did Not Occur</option>
-                    </select>
-                </div>
-
-                <div class="completed-fields" style="display:none;">
-
-                    <div class="form-group">
-                        <label>Units Donated</label>
-                        <input type="number"
-                               name="unitsDonated"
-                               min="1"
-                               step="1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Donation Date</label>
-                        <input type="date"
-                               name="donationDate"
-                               th:attr="max=${today}">
-                    </div>
-                </div>
-
-                <button type="submit" class="button report">
-                    Submit Donation Report
-                </button>
-            </form>
-        </div>
-
-        <!-- Already reported -->
-        <p class="notice"
-           th:if="${reportedMatchIds.contains(match.id)}">
-            You have already submitted the donation outcome for this request.
+        <p class="hl-field-hint hl-privacy-note">
+            <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>
+            Your contact details are private. The requester sees your name and phone number only if you accept and choose to share them.
         </p>
-
-        <!-- Declined -->
-        <div th:if="${match.donorResponse.name() == 'DECLINED'}">
-            <p>You declined this request.</p>
-        </div>
-
-        <!-- Inactive request -->
-        <div class="notice"
-             th:if="${match.bloodRequest.adminStatus.name() == 'CLOSED'
-                  or match.bloodRequest.adminStatus.name() == 'REJECTED'
-                  or match.bloodRequest.adminStatus.name() == 'FULFILLED'}">
-
-            This request is no longer active. No further response
-            or contact-sharing action is available.
-        </div>
-
-        <p class="notice">
-            Requester contact information is protected.
-            Your contact details are not visible to the requester
-            unless you accept, consent, and an administrator approves.
-        </p>
-
-    </div>
-
-    <p><a th:href="@{/dashboard}">Back to Dashboard</a></p>
-
-</div>
-
-<script>
-    document.querySelectorAll(".donation-report-form").forEach(form => {
-        const outcomeSelect = form.querySelector(".outcome-select");
-        const completedFields = form.querySelector(".completed-fields");
-        const unitsInput = form.querySelector('input[name="unitsDonated"]');
-        const dateInput = form.querySelector('input[name="donationDate"]');
-
-        function updateFields() {
-            const completed = outcomeSelect.value === "COMPLETED";
-
-            completedFields.style.display = completed ? "block" : "none";
-
-            unitsInput.required = completed;
-            dateInput.required = completed;
-
-            if (!completed) {
-                unitsInput.value = "";
-                dateInput.value = "";
-            }
-        }
-
-        outcomeSelect.addEventListener("change", updateFields);
-        updateFields();
-    });
-</script>
-
+    </th:block>
+</main>
 </body>
 </html>

@@ -1,111 +1,165 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Blood Request | HemoLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            margin: 0;
-            padding: 30px;
-            color: #222;
-        }
-
-        .container {
-            max-width: 650px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        }
-
-        h2 { margin-top: 0; color: #b42332; }
-
-        label {
-            display: block;
-            margin: 16px 0 7px;
-            font-weight: bold;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 11px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-
-        button {
-            margin-top: 22px;
-            padding: 12px 20px;
-            background: #b42332;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .error { color: #c62828; font-size: 13px; margin-top: 5px; }
-        .back { display: inline-block; margin-top: 18px; color: #555; }
-    </style>
-</head>
+<!--
+    Create Blood Request (Module 3.4, FR-06/FR-07).
+    Server-side validation with an error next to each field (NFR-05).
+    The "Donor availability" box shows anonymous counts only (D-05).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Create Blood Request', 'create-request', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<div class="container">
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Create Blood Request</li>
+    </ol>
 
-    <h2>Create Blood Request</h2>
-    <p>Provide the details of the blood requirement.</p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Create Blood Request</h1>
+            <p>Tell us what is needed. Compatible donors in the same city are matched automatically.</p>
+        </div>
+    </div>
 
-    <form th:action="@{/requests}" th:object="${request}" method="post">
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-        <label>Blood Group</label>
-        <select th:field="*{bloodGroup}">
-            <option value="">Select blood group</option>
-            <option th:each="group : ${bloodGroups}"
-                    th:value="${group}"
-                    th:text="${#strings.replace(group.name(), '_', ' ')}">
-            </option>
-        </select>
-        <div class="error" th:errors="*{bloodGroup}"></div>
+    <div class="hl-form-layout">
 
-        <label>Units Required</label>
-        <input type="number" th:field="*{unitsRequired}" min="1"
-               placeholder="Enter required units">
-        <div class="error" th:errors="*{unitsRequired}"></div>
+        <section class="hl-card" aria-labelledby="formTitle">
+            <div class="hl-card-header">
+                <h2 id="formTitle" class="hl-card-title">Request details</h2>
+            </div>
 
-        <label>City / Service Area</label>
-        <input type="text" th:field="*{city}" placeholder="Enter city">
-        <div class="error" th:errors="*{city}"></div>
+            <form th:action="@{/requests}" th:object="${request}" method="post"
+                  class="hl-form-grid" novalidate data-availability-form>
 
-        <label>Hospital Name</label>
-        <input type="text" th:field="*{hospitalName}"
-               placeholder="Enter hospital name">
-        <div class="error" th:errors="*{hospitalName}"></div>
+                <div class="hl-field">
+                    <label for="bloodGroup">Blood group needed <span class="hl-required" aria-hidden="true">*</span></label>
+                    <select id="bloodGroup" class="hl-select" th:field="*{bloodGroup}" required
+                            th:attr="aria-invalid=${#fields.hasErrors('bloodGroup')} ? 'true',
+                                     aria-describedby=${#fields.hasErrors('bloodGroup')} ? 'bloodGroupError'">
+                        <option value="">Select blood group</option>
+                        <option th:each="group : ${bloodGroups}" th:value="${group}" th:text="${group.label}">A+</option>
+                    </select>
+                    <span id="bloodGroupError" class="hl-field-error" th:if="${#fields.hasErrors('bloodGroup')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{bloodGroup}">Error</span>
+                    </span>
+                </div>
 
-        <label>Required Date and Time</label>
-        <input type="datetime-local" th:field="*{requiredAt}">
-        <div class="error" th:errors="*{requiredAt}"></div>
+                <div class="hl-field">
+                    <label for="unitsRequired">Units required <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="unitsRequired" class="hl-input" type="number" min="1" inputmode="numeric"
+                           th:field="*{unitsRequired}" placeholder="For example 2" required
+                           th:attr="aria-invalid=${#fields.hasErrors('unitsRequired')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('unitsRequired')} ? 'unitsError' : 'unitsHint'">
+                    <span id="unitsHint" class="hl-field-hint">One unit is one donation (about 450 ml).</span>
+                    <span id="unitsError" class="hl-field-error" th:if="${#fields.hasErrors('unitsRequired')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{unitsRequired}">Error</span>
+                    </span>
+                </div>
 
-        <label>Urgency</label>
-        <select th:field="*{urgency}">
-            <option value="">Select urgency</option>
-            <option th:each="option : ${urgencyOptions}"
-                    th:value="${option}"
-                    th:text="${option}">
-            </option>
-        </select>
-        <div class="error" th:errors="*{urgency}"></div>
+                <div class="hl-field">
+                    <label for="city">City <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="city" class="hl-input" type="text" maxlength="100" autocomplete="address-level2"
+                           th:field="*{city}" placeholder="For example Sukkur" required
+                           th:attr="aria-invalid=${#fields.hasErrors('city')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('city')} ? 'cityError' : 'cityHint'">
+                    <span id="cityHint" class="hl-field-hint">Donors are matched in this city.</span>
+                    <span id="cityError" class="hl-field-error" th:if="${#fields.hasErrors('city')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{city}">Error</span>
+                    </span>
+                </div>
 
-        <button type="submit">Submit Blood Request</button>
-    </form>
+                <div class="hl-field">
+                    <label for="hospitalName">Hospital <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="hospitalName" class="hl-input" type="text" maxlength="150"
+                           th:field="*{hospitalName}" placeholder="Hospital name" required
+                           th:attr="aria-invalid=${#fields.hasErrors('hospitalName')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('hospitalName')} ? 'hospitalError'">
+                    <span id="hospitalError" class="hl-field-error" th:if="${#fields.hasErrors('hospitalName')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{hospitalName}">Error</span>
+                    </span>
+                </div>
 
-    <a class="back" th:href="@{/requests}">View My Requests</a>
+                <div class="hl-field">
+                    <label for="requiredAt">Needed by <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="requiredAt" class="hl-input" type="datetime-local" th:field="*{requiredAt}" required
+                           th:attr="aria-invalid=${#fields.hasErrors('requiredAt')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('requiredAt')} ? 'requiredAtError' : 'requiredAtHint'">
+                    <span id="requiredAtHint" class="hl-field-hint">Date and time the blood is needed.</span>
+                    <span id="requiredAtError" class="hl-field-error" th:if="${#fields.hasErrors('requiredAt')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{requiredAt}">Error</span>
+                    </span>
+                </div>
 
-</div>
+                <div class="hl-field">
+                    <label for="urgency">Urgency <span class="hl-required" aria-hidden="true">*</span></label>
+                    <select id="urgency" class="hl-select" th:field="*{urgency}" required
+                            th:attr="aria-invalid=${#fields.hasErrors('urgency')} ? 'true',
+                                     aria-describedby=${#fields.hasErrors('urgency')} ? 'urgencyError' : 'urgencyHint'">
+                        <option value="">Select urgency</option>
+                        <option th:each="option : ${urgencyOptions}" th:value="${option}" th:text="${option.label}">Normal</option>
+                    </select>
+                    <span id="urgencyHint" class="hl-field-hint">
+                        Critical: matching starts immediately. Normal: an administrator reviews it first.
+                    </span>
+                    <span id="urgencyError" class="hl-field-error" th:if="${#fields.hasErrors('urgency')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{urgency}">Error</span>
+                    </span>
+                </div>
 
+                <div class="hl-form-span-2 hl-action-row">
+                    <button class="hl-button hl-button-lg" type="submit">
+                        <th:block th:replace="~{fragments/icons :: icon('plus')}"></th:block>Submit Blood Request
+                    </button>
+                    <a class="hl-button hl-button-secondary hl-button-lg" th:href="@{/requests}">Cancel</a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="hl-stack" aria-label="Help">
+
+            <!-- Live anonymous counts (Module 3.4). Works without JavaScript too: the link below. -->
+            <section class="hl-card hl-avail-box" aria-labelledby="availTitle"
+                     th:attr="data-availability-url=@{/requests/donor-availability/summary}">
+                <div class="hl-card-header">
+                    <h2 id="availTitle" class="hl-card-title">
+                        <th:block th:replace="~{fragments/icons :: icon('users')}"></th:block>Donor availability
+                    </h2>
+                </div>
+                <div class="hl-avail-result" aria-live="polite">
+                    <p class="muted" data-avail-message>Choose a blood group and city to see how many compatible donors are available.</p>
+                    <div class="hl-avail-numbers" data-avail-numbers hidden>
+                        <div>
+                            <span class="hl-avail-value" data-avail-city>0</span>
+                            <span class="hl-avail-label" data-avail-city-label>in this city</span>
+                        </div>
+                        <div>
+                            <span class="hl-avail-value" data-avail-all>0</span>
+                            <span class="hl-avail-label">in all cities</span>
+                        </div>
+                    </div>
+                    <p class="hl-field-hint" data-avail-note hidden></p>
+                </div>
+                <p class="hl-field-hint">
+                    Anonymous counts of available donors who can give to this blood group.
+                    Each donor still decides whether to accept.
+                </p>
+                <a class="hl-text-link" th:href="@{/requests/donor-availability}">See availability for every city</a>
+            </section>
+
+            <section class="hl-card" aria-labelledby="howTitle">
+                <h2 id="howTitle" class="hl-card-title">What happens next</h2>
+                <ol class="hl-steps">
+                    <li><strong>Matching.</strong> Compatible, available donors in your city are notified.</li>
+                    <li><strong>Donors reply.</strong> A donor who accepts can choose to share their contact details with you.</li>
+                    <li><strong>You arrange the donation</strong> and the request is completed when all units are donated.</li>
+                </ol>
+            </section>
+        </aside>
+    </div>
+
+    <script th:src="@{/js/requests.js}" defer></script>
+</main>
 </body>
 </html>

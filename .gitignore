@@ -34,3 +34,4 @@ build/
 
 # Local database credentials
 /src/main/resources/application-local.properties
+/src/main/resources-old/

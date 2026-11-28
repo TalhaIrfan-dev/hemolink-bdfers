@@ -1,66 +1,374 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | HemoLink</title>
-    <link rel="stylesheet" th:href="@{/css/variables.css}">
-    <link rel="stylesheet" th:href="@{/css/global.css}">
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
-    <link rel="stylesheet" th:href="@{/css/components.css}">
-    <link rel="stylesheet" th:href="@{/css/pages.css}">
-    <script th:src="@{/js/main.js}" defer></script>
-</head>
+<html th:replace="~{layouts/app :: layout('Dashboard', 'dashboard', ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:replace="~{layouts/dashboard :: page('Dashboard', 'dashboard', ~{::pageContent})}"></div>
+<!--
+    User dashboard (Module 3.3), following the design reference.
+    Every number comes from DashboardService (Module 2.7): own requests only,
+    no donor identities, "+N this week" = created in the last 7 days.
+-->
+<main id="main" class="hl-page-content"
+      th:with="rd=${requesterDashboard}, dd=${donorDashboard}, year=${@display.currentYear()}">
 
-<main th:fragment="pageContent" class="hl-page-content">
+    <!-- ===================== Greeting ===================== -->
     <div class="hl-page-heading">
         <div>
-            <h1>Welcome to HemoLink 👋</h1>
-            <p>Find blood donors, manage requests, and help connect people in need.</p>
+            <h1>
+                <span th:text="${@display.greeting() + ', ' + (currentUser != null ? currentUser.firstName : 'there')}">Good morning, Ayesha</span>
+                <span aria-hidden="true">👋</span>
+            </h1>
+            <p>Request blood, track your requests, and find matching donors in your area.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button hl-button-lg" th:href="@{/requests/new}">
+                <th:block th:replace="~{fragments/icons :: icon('plus')}"></th:block>Create Blood Request
+            </a>
         </div>
     </div>
 
-    <div th:replace="~{fragments/alerts :: alerts}"></div>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-    <section class="hl-grid hl-grid-quick">
-        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
-            <div class="hl-quick-icon">＋</div>
-            <h2>Create a blood request</h2>
-            <p class="muted">Submit a new request with blood group, required units, hospital and urgency.</p>
-            <a class="hl-button" th:href="@{/requests/new}">Create Request <span aria-hidden="true">→</span></a>
+    <!-- ===================== KPI cards ===================== -->
+    <section class="hl-kpi-grid" aria-label="Your request summary">
+        <article class="hl-card hl-kpi hl-kpi--primary">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block></span>
+            <span class="hl-kpi-label">Active Requests</span>
+            <span class="hl-kpi-value" th:text="${rd.activeRequests}">0</span>
+            <span class="hl-kpi-trend" th:if="${rd.activeThisWeek > 0}">
+                <th:block th:replace="~{fragments/icons :: icon('arrow-up')}"></th:block><strong th:text="${'+' + rd.activeThisWeek}">+1</strong>&nbsp;this week
+            </span>
+            <span class="hl-kpi-trend" th:unless="${rd.activeThisWeek > 0}">None new this week</span>
         </article>
-        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
-            <div class="hl-quick-icon">☷</div>
-            <h2>Track your requests</h2>
-            <p class="muted">Review request status, matching progress and approved donor contacts.</p>
-            <a class="hl-button hl-button-secondary" th:href="@{/requests}">My Requests <span aria-hidden="true">→</span></a>
+
+        <article class="hl-card hl-kpi">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('users')}"></th:block></span>
+            <span class="hl-kpi-label">Potential Matches</span>
+            <span class="hl-kpi-value" th:text="${rd.potentialMatches}">0</span>
+            <span class="hl-kpi-trend" th:if="${rd.matchesThisWeek > 0}">
+                <th:block th:replace="~{fragments/icons :: icon('arrow-up')}"></th:block><strong th:text="${'+' + rd.matchesThisWeek}">+1</strong>&nbsp;this week
+            </span>
+            <span class="hl-kpi-trend" th:unless="${rd.matchesThisWeek > 0}">None new this week</span>
         </article>
-        <article class="hl-card hl-quick-card" sec:authorize="hasRole('USER')">
-            <div class="hl-quick-icon">♥</div>
-            <h2>Become a donor</h2>
-            <p class="muted">Complete your donor profile and review blood requests matched to your profile.</p>
-            <div class="hl-action-row">
-                <a class="hl-button hl-button-secondary" th:href="@{/donor/profile}">My Donor Profile</a>
-                <a class="hl-text-link" th:href="@{/donor/requests}">Matched requests →</a>
+
+        <article class="hl-card hl-kpi hl-kpi--warning">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('hourglass')}"></th:block></span>
+            <span class="hl-kpi-label">Awaiting Responses</span>
+            <span class="hl-kpi-value" th:text="${rd.awaitingResponses}">0</span>
+            <span class="hl-kpi-trend" th:if="${rd.awaitingThisWeek > 0}">
+                <th:block th:replace="~{fragments/icons :: icon('arrow-up')}"></th:block><strong th:text="${'+' + rd.awaitingThisWeek}">+1</strong>&nbsp;this week
+            </span>
+            <span class="hl-kpi-trend" th:unless="${rd.awaitingThisWeek > 0}">None new this week</span>
+        </article>
+
+        <article class="hl-card hl-kpi">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block></span>
+            <span class="hl-kpi-label">Completed Requests</span>
+            <span class="hl-kpi-value" th:text="${rd.completedRequests}">0</span>
+            <span class="hl-kpi-trend" th:if="${rd.completedThisWeek > 0}">
+                <th:block th:replace="~{fragments/icons :: icon('arrow-up')}"></th:block><strong th:text="${'+' + rd.completedThisWeek}">+1</strong>&nbsp;this week
+            </span>
+            <span class="hl-kpi-trend" th:unless="${rd.completedThisWeek > 0}">None new this week</span>
+        </article>
+    </section>
+
+    <!-- ===================== Trend + urgent / activity ===================== -->
+    <div class="hl-dashboard-grid">
+        <section class="hl-card" aria-labelledby="trendTitle">
+            <div class="hl-card-header">
+                <h2 id="trendTitle" class="hl-card-title">Blood Request Trend</h2>
+                <div class="hl-chart-controls">
+                    <div class="hl-tabs" role="tablist" aria-label="Chart period">
+                        <button class="hl-tab" type="button" role="tab" aria-selected="false" data-period="WEEK" data-chart-target="userTrend">Week</button>
+                        <button class="hl-tab" type="button" role="tab" aria-selected="false" data-period="MONTH" data-chart-target="userTrend">Month</button>
+                        <button class="hl-tab" type="button" role="tab" aria-selected="true" data-period="YEAR" data-chart-target="userTrend">Year</button>
+                    </div>
+                    <label class="hl-visually-hidden" for="trendYear">Year</label>
+                    <select id="trendYear" class="hl-select-sm" data-year-for="userTrend">
+                        <option th:each="y : ${#numbers.sequence(year - 2, year)}"
+                                th:value="${y}" th:text="${y}" th:selected="${y == year}">2026</option>
+                    </select>
+                </div>
             </div>
-        </article>
-        <article class="hl-card hl-quick-card" sec:authorize="hasRole('ADMIN')">
-            <div class="hl-quick-icon">▦</div>
-            <h2>Administration</h2>
-            <p class="muted">Review blood requests, manage donor eligibility and approve contact disclosures.</p>
-            <a class="hl-button" th:href="@{/admin/dashboard}">Open Admin Dashboard <span aria-hidden="true">→</span></a>
-        </article>
+            <div id="userTrend" class="hl-chart-wrap" th:attr="data-trend-url=@{/dashboard/trend}"
+                 data-period="YEAR" th:data-year="${year}">
+                <canvas role="img" aria-label="Your requests and donor matches over time"></canvas>
+                <div class="hl-chart-message">Loading chart…</div>
+            </div>
+            <div class="hl-chart-legend">
+                <span><span class="hl-legend-dot" style="background:#0b5d4f"></span>Requests</span>
+                <span><span class="hl-legend-dot" style="background:#4fd1a5"></span>Matches</span>
+            </div>
+        </section>
+
+        <div class="hl-stack">
+            <!-- Urgent requests: your active Critical requests -->
+            <section class="hl-card" aria-labelledby="urgentTitle">
+                <div class="hl-card-header">
+                    <h2 id="urgentTitle" class="hl-card-title">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>Urgent Requests
+                    </h2>
+                    <a class="hl-view-all" th:href="@{/requests}">View All<th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block></a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(rd.urgentRequests)}">
+                    <th:block th:replace="~{fragments/ui :: empty('check-circle', 'No urgent requests', 'Your active critical requests will appear here.')}"></th:block>
+                </div>
+
+                <div class="hl-urgent" th:each="r : ${rd.urgentRequests}">
+                    <div class="hl-urgent-head">
+                        <span class="hl-urgent-id" th:text="${@display.requestId(r.id)}">REQ-1048</span>
+                        <th:block th:replace="~{fragments/ui :: urgencyPill(${r.urgency})}"></th:block>
+                    </div>
+                    <div class="hl-urgent-meta">
+                        <span th:text="${r.bloodGroup.label}">A+</span>
+                        <span th:text="${r.city}">City</span>
+                        <span th:text="${r.unitsRequired + (r.unitsRequired == 1 ? ' unit' : ' units')}">2 units</span>
+                        <span class="hl-pill" th:classappend="${@display.stageClass(r)}" th:text="${@display.stageLabel(r)}">Matching</span>
+                    </div>
+                    <div class="hl-action-row" style="margin-top:12px">
+                        <a class="hl-button hl-button-secondary hl-button-sm" th:href="@{/requests/{id}(id=${r.id})}">View Details</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent activity: your latest notifications -->
+            <section class="hl-card" aria-labelledby="activityTitle">
+                <div class="hl-card-header">
+                    <h2 id="activityTitle" class="hl-card-title">
+                        <th:block th:replace="~{fragments/icons :: icon('activity')}"></th:block>Recent Activity
+                    </h2>
+                    <a class="hl-view-all" th:href="@{/notifications}">View All<th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block></a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(rd.recentActivity)}">
+                    <th:block th:replace="~{fragments/ui :: empty('bell', 'No activity yet', 'Updates about your requests and matches will appear here.')}"></th:block>
+                </div>
+
+                <ol class="hl-timeline" th:unless="${#lists.isEmpty(rd.recentActivity)}">
+                    <li class="hl-timeline-item" th:each="n : ${rd.recentActivity}"
+                        th:classappend="${@display.notificationTone(n.type)}">
+                        <span class="hl-timeline-icon"><th:block th:replace="~{fragments/icons :: icon(${@display.notificationIcon(n.type)})}"></th:block></span>
+                        <div>
+                            <div class="hl-timeline-title" th:text="${n.message}">Message</div>
+                            <div class="hl-timeline-time" th:text="${@display.relative(n.createdAt)}">10 minutes ago</div>
+                        </div>
+                    </li>
+                </ol>
+            </section>
+        </div>
+    </div>
+
+    <!-- ===================== Blood groups + recent requests ===================== -->
+    <div class="hl-dashboard-grid-even">
+        <section class="hl-card" aria-labelledby="groupsTitle">
+            <div class="hl-card-header">
+                <h2 id="groupsTitle" class="hl-card-title">Requests by Blood Group</h2>
+            </div>
+
+            <div th:if="${rd.totalRequests == 0}">
+                <th:block th:replace="~{fragments/ui :: empty('drop', 'No requests yet', 'Your requests will be summarised here by blood group.')}"></th:block>
+            </div>
+
+            <div class="hl-donut-layout" th:unless="${rd.totalRequests == 0}">
+                <div class="hl-donut-wrap">
+                    <canvas role="img"
+                            th:attr="aria-label=${'Your ' + rd.totalRequests + ' requests by blood group'},
+                                     data-donut-labels=${@display.labelsJson(rd.requestsByBloodGroup)},
+                                     data-donut-values=${@display.countsJson(rd.requestsByBloodGroup)}"></canvas>
+                    <div class="hl-chart-message"></div>
+                    <div class="hl-donut-center">
+                        <strong th:text="${rd.totalRequests}">0</strong>
+                        <span th:text="${rd.totalRequests == 1 ? 'Request' : 'Requests'}">Requests</span>
+                    </div>
+                </div>
+                <ul class="hl-legend-list">
+                    <li th:each="item, iter : ${rd.requestsByBloodGroup}">
+                        <span><span class="hl-legend-dot" th:style="${'background:' + @display.chartColor(iter.index)}"></span><span th:text="${item.label}">A+</span></span>
+                        <strong th:text="${@display.percent(item.count, rd.totalRequests)}">29%</strong>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="hl-card" aria-labelledby="recentTitle">
+            <div class="hl-card-header">
+                <h2 id="recentTitle" class="hl-card-title">My Recent Requests</h2>
+                <a class="hl-view-all" th:href="@{/requests}">View All<th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block></a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(rd.recentRequests)}">
+                <div class="hl-state hl-state--empty">
+                    <span class="hl-state-icon"><th:block th:replace="~{fragments/icons :: icon('plus-square')}"></th:block></span>
+                    <strong class="hl-state-title">Create your first blood request</strong>
+                    <p class="muted">Critical requests are matched with compatible donors straight away.</p>
+                    <a class="hl-button" th:href="@{/requests/new}" style="margin-top:8px">Create Blood Request</a>
+                </div>
+            </div>
+
+            <div class="hl-table-wrap" th:unless="${#lists.isEmpty(rd.recentRequests)}">
+                <table class="hl-table hl-table--stack">
+                    <thead>
+                    <tr>
+                        <th scope="col">Request ID</th>
+                        <th scope="col">Blood Group</th>
+                        <th scope="col">Units</th>
+                        <th scope="col">Urgency</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="hl-visually-hidden">Actions</span></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${rd.recentRequests}">
+                        <td data-label="Request ID"><strong th:text="${@display.requestId(r.id)}">REQ-0001</strong></td>
+                        <td data-label="Blood Group"><span class="hl-blood" th:text="${r.bloodGroup.label}">A+</span></td>
+                        <td data-label="Units" th:text="${r.unitsRequired}">1</td>
+                        <td data-label="Urgency"><th:block th:replace="~{fragments/ui :: urgencyPill(${r.urgency})}"></th:block></td>
+                        <td data-label="Status"><span class="hl-pill" th:classappend="${@display.stageClass(r)}" th:text="${@display.stageLabel(r)}">Matching</span></td>
+                        <td data-label="">
+                            <a class="hl-icon-button" th:href="@{/requests/{id}(id=${r.id})}"
+                               th:attr="aria-label=${'Open ' + @display.requestId(r.id)}">
+                                <th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===================== Donor section ===================== -->
+    <section class="hl-dashboard-section" aria-labelledby="donorTitle">
+        <div class="hl-page-heading" style="margin-top:28px; margin-bottom:14px">
+            <div>
+                <h2 id="donorTitle">As a donor</h2>
+                <p>Your availability, guidance and the requests waiting for your reply.</p>
+            </div>
+            <div class="hl-page-heading-actions" th:if="${dd.hasProfile}">
+                <a class="hl-button hl-button-secondary" th:href="@{/donor/requests}">Matched Requests</a>
+            </div>
+        </div>
+
+        <!-- No donor profile yet -->
+        <div class="hl-card" th:unless="${dd.hasProfile}">
+            <div class="hl-state hl-state--empty">
+                <span class="hl-state-icon"><th:block th:replace="~{fragments/icons :: icon('heart')}"></th:block></span>
+                <strong class="hl-state-title">Become a donor</strong>
+                <p class="muted">Set up your donor profile to be matched with compatible blood requests near you. Your contact details stay private until you choose to share them.</p>
+                <a class="hl-button" th:href="@{/donor/profile}" style="margin-top:8px">Set up donor profile</a>
+            </div>
+        </div>
+
+        <th:block th:if="${dd.hasProfile}">
+            <!-- Deactivated by an administrator -->
+            <div class="hl-alert hl-alert-error" th:unless="${dd.profileActive}" role="alert">
+                <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>
+                <span>Your donor profile has been deactivated by an administrator, so you are not matched to requests.
+                    <a th:href="@{/donor/profile}">See the reason on your donor profile.</a></span>
+            </div>
+
+            <div class="hl-kpi-grid">
+                <!-- Availability with quick switch (FR-05) -->
+                <article class="hl-card hl-kpi" th:classappend="${dd.availabilityLabel == 'Available'} ? '' : 'hl-kpi--warning'">
+                    <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('user')}"></th:block></span>
+                    <span class="hl-kpi-label">Availability</span>
+                    <span class="hl-kpi-value" style="font-size:22px" th:text="${dd.availabilityLabel}">Available</span>
+                    <form class="hl-kpi-trend" th:action="@{/donor/availability}" method="post">
+                        <input type="hidden" name="availability"
+                               th:value="${dd.availabilityLabel == 'Available' ? 'UNAVAILABLE' : 'AVAILABLE'}">
+                        <button class="hl-button hl-button-secondary hl-button-sm" type="submit"
+                                th:text="${dd.availabilityLabel == 'Available' ? 'Set unavailable' : 'Set available'}">Set unavailable</button>
+                    </form>
+                </article>
+
+                <article class="hl-card hl-kpi" th:classappend="${dd.awaitingMyReply > 0} ? 'hl-kpi--warning'">
+                    <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('hourglass')}"></th:block></span>
+                    <span class="hl-kpi-label">Waiting for my reply</span>
+                    <span class="hl-kpi-value" th:text="${dd.awaitingMyReply}">0</span>
+                    <span class="hl-kpi-trend">Requests you can accept</span>
+                </article>
+
+                <article class="hl-card hl-kpi">
+                    <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('check')}"></th:block></span>
+                    <span class="hl-kpi-label">Accepted (active)</span>
+                    <span class="hl-kpi-value" th:text="${dd.acceptedActive}">0</span>
+                    <span class="hl-kpi-trend">Requests you agreed to help</span>
+                </article>
+
+                <article class="hl-card hl-kpi">
+                    <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block></span>
+                    <span class="hl-kpi-label">Completed donations</span>
+                    <span class="hl-kpi-value" th:text="${dd.completedDonations}">0</span>
+                    <span class="hl-kpi-trend" th:text="${dd.lastDonationDate != null ? 'Last: ' + @display.date(dd.lastDonationDate) : 'No donation recorded'}">Last: -</span>
+                </article>
+            </div>
+
+            <div class="hl-dashboard-grid">
+                <!-- Requests waiting for my reply -->
+                <section class="hl-card" aria-labelledby="pendingTitle">
+                    <div class="hl-card-header">
+                        <h2 id="pendingTitle" class="hl-card-title">
+                            <th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block>Requests waiting for your reply
+                        </h2>
+                        <a class="hl-view-all" th:href="@{/donor/requests}">View All<th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block></a>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(dd.pendingItems)}">
+                        <th:block th:replace="~{fragments/ui :: empty('check-circle', 'Nothing waiting', 'When a compatible request is matched to you, it will appear here.')}"></th:block>
+                    </div>
+
+                    <div class="hl-table-wrap" th:unless="${#lists.isEmpty(dd.pendingItems)}">
+                        <table class="hl-table hl-table--stack">
+                            <thead>
+                            <tr>
+                                <th scope="col">Request</th>
+                                <th scope="col">Needed</th>
+                                <th scope="col">Hospital</th>
+                                <th scope="col">Urgency</th>
+                                <th scope="col"><span class="hl-visually-hidden">Actions</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${dd.pendingItems}">
+                                <td data-label="Request"><strong th:text="${@display.requestId(p.requestId)}">REQ-0001</strong></td>
+                                <td data-label="Needed"><span class="hl-blood" th:text="${p.bloodGroupLabel}">A+</span></td>
+                                <td data-label="Hospital">
+                                    <span th:text="${p.hospitalName}">Hospital</span>
+                                    <span class="hl-table-sub" th:text="${p.city}">City</span>
+                                </td>
+                                <td data-label="Urgency">
+                                    <span class="hl-pill" th:classappend="${p.critical} ? 'hl-pill--critical' : 'hl-pill--normal'" th:text="${p.urgencyLabel}">Critical</span>
+                                </td>
+                                <td data-label="">
+                                    <a class="hl-button hl-button-sm" th:href="@{/donor/requests/{id}/accept(id=${p.matchId})}">Accept</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Guidance (advisory, D-01) -->
+                <section class="hl-card" aria-labelledby="guidanceTitle">
+                    <div class="hl-card-header">
+                        <h2 id="guidanceTitle" class="hl-card-title">
+                            <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>Donation guidance
+                        </h2>
+                        <span class="hl-pill" th:classappend="${dd.advice.ok} ? 'hl-pill--ok' : 'hl-pill--not_advised'"
+                              th:text="${dd.advice.level.label}">Looks OK</span>
+                    </div>
+                    <ul class="hl-guidance-list">
+                        <li th:each="reason : ${dd.advice.reasons}" class="is-reason" th:text="${reason}">Reason</li>
+                        <li th:each="fact : ${dd.advice.facts}" th:text="${fact}">Fact</li>
+                        <li th:if="${dd.nextSuggestedDate != null}"
+                            th:text="${'Next suggested donation: ' + @display.date(dd.nextSuggestedDate)}">Next suggested</li>
+                    </ul>
+                    <p class="hl-field-hint">Guidance only, based on your profile. It never stops you from accepting; haemoglobin is checked when you accept a request.</p>
+                </section>
+            </div>
+        </th:block>
     </section>
 
-    <section class="hl-card hl-help-card">
-        <div class="hl-help-mark">♥</div>
-        <div>
-            <h2>Every donation can make a difference.</h2>
-            <p class="muted">Keep your donor profile and availability up to date so HemoLink can identify suitable matches.</p>
-        </div>
-    </section>
+    <th:block th:replace="~{fragments/head :: chartScripts}"></th:block>
 </main>
 </body>
 </html>

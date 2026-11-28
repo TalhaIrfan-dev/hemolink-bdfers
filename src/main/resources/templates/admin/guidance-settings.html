@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+    Admin: Donation Guidance Settings (Module 3.6, D-02, D-03, SCR-06).
+    Values drive advice only; an empty value switches that check off.
+    Every change is recorded (guidance_settings_audit).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Guidance Settings', 'admin-guidance', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li aria-current="page">Guidance Settings</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1>Donation Guidance Settings</h1>
+            <p>The values used to give donors advice on their profile and when they accept a request.</p>
+        </div>
+    </div>
+
+    <div class="hl-alert hl-alert-info" role="note">
+        <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+        <span>Advice only: it never stops a donor from accepting and is not a medical assessment. Leave a value empty to switch that check off. Every change is recorded below.</span>
+    </div>
+
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
+
+    <form class="hl-card" th:action="@{/admin/guidance-settings}" method="post" novalidate aria-labelledby="settingsTitle">
+        <div class="hl-card-header">
+            <h2 id="settingsTitle" class="hl-card-title">Guidance values</h2>
+        </div>
+        <ul class="hl-settings-list">
+            <li class="hl-setting" th:each="row : ${rows}" th:classappend="${errors[row.name] != null} ? 'has-error'">
+                <div class="hl-setting-text">
+                    <label th:for="${'value_' + row.name}">
+                        <span th:text="${row.label}">Minimum weight</span>
+                        <span class="hl-pill hl-pill--fulfilled" th:if="${row.on}">On</span>
+                        <span class="hl-pill hl-pill--closed" th:unless="${row.on}">Off</span>
+                    </label>
+                    <p class="hl-field-hint" th:id="${'help_' + row.name}" th:text="${row.help}">Help</p>
+                    <p class="hl-table-sub" th:if="${row.updatedAt != null}"
+                       th:text="${'Last changed by ' + row.updatedByName + ', ' + @display.dateTime(row.updatedAt)}">Last changed</p>
+                </div>
+                <div class="hl-setting-input">
+                    <div class="hl-input-unit">
+                        <input class="hl-input" type="number"
+                               th:id="${'value_' + row.name}" th:name="${'value_' + row.name}" th:value="${row.value}"
+                               th:attr="step=${row.step},min=${row.min},max=${row.max},
+                                        aria-describedby=${errors[row.name] != null ? 'error_' + row.name : 'help_' + row.name},
+                                        aria-invalid=${errors[row.name] != null ? 'true' : null}"
+                               placeholder="Off">
+                        <span th:text="${row.unit}">kg</span>
+                    </div>
+                    <span class="hl-field-error" th:id="${'error_' + row.name}" th:if="${errors[row.name] != null}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:text="${errors[row.name]}">Error</span>
+                    </span>
+                </div>
+            </li>
+        </ul>
+        <div class="hl-action-row">
+            <button class="hl-button hl-button-lg" type="submit">Save settings</button>
+            <a class="hl-button hl-button-secondary hl-button-lg" th:href="@{/admin/guidance-settings}">Discard changes</a>
+        </div>
+    </form>
+
+    <section class="hl-card hl-section-gap" aria-labelledby="changesTitle">
+        <div class="hl-card-header">
+            <h2 id="changesTitle" class="hl-card-title">Recent changes</h2>
+        </div>
+        <th:block th:if="${#lists.isEmpty(changes)}">
+            <th:block th:replace="~{fragments/ui :: empty('history', 'No changes yet', 'Changes to the guidance values appear here with who made them and when.')}"></th:block>
+        </th:block>
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(changes)}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr><th scope="col">Setting</th><th scope="col">Old value</th><th scope="col">New value</th><th scope="col">Changed by</th><th scope="col">When</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="change : ${changes}">
+                    <td data-label="Setting" th:text="${change.settingLabel}">Setting</td>
+                    <td data-label="Old value" th:text="${change.oldValue == null or change.oldValue.isEmpty() ? 'Off' : change.oldValue}">-</td>
+                    <td data-label="New value" class="hl-strong" th:text="${change.newValue == null or change.newValue.isEmpty() ? 'Off' : change.newValue}">-</td>
+                    <td data-label="Changed by" th:text="${change.changedBy}">Admin</td>
+                    <td data-label="When" th:text="${@display.dateTime(change.changedAt)}">date</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,156 +1,74 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>HemoLink | Contact Disclosure Review</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            padding: 25px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: auto;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 18px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.07);
-        }
-
-        button {
-            padding: 9px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 8px;
-        }
-
-        .approve {
-            background: #16834a;
-            color: white;
-        }
-
-        .reject {
-            background: #b42332;
-            color: white;
-        }
-
-        .success {
-            color: green;
-        }
-
-        .error {
-            color: red;
-        }
-    </style>
-</head>
-
+<!--
+    Admin: Contact Disclosure Log (Module 3.6, D-16, SCR-13). Read-only:
+    donors control their own sharing; administrators can see the record.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Disclosure Log', 'admin-disclosures', ~{::main})}">
 <body>
-<div class="container">
+<main id="main" class="hl-page-content">
 
-    <h1>HemoLink</h1>
-    <h2>Contact Disclosure Requests</h2>
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li aria-current="page">Disclosure Log</li>
+    </ol>
 
-    <p class="success"
-       th:if="${successMessage}"
-       th:text="${successMessage}"></p>
-
-    <p class="error"
-       th:if="${errorMessage}"
-       th:text="${errorMessage}"></p>
-
-    <div th:if="${#lists.isEmpty(disclosureRequests)}">
-        <p>No pending contact disclosure requests.</p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Contact Disclosure Log</h1>
+            <p>Which donors shared their contact details, with which requester, and whether they are still visible.</p>
+        </div>
     </div>
 
-    <div class="card"
-         th:each="match : ${disclosureRequests}">
-
-        <h3>
-            Request #
-            <span th:text="${match.bloodRequest.id}"></span>
-        </h3>
-
-        <h4>Donor Information</h4>
-
-        <p>
-            <strong>Name:</strong>
-            <span th:text="${match.donor.user.fullName}"></span>
-        </p>
-
-        <p>
-            <strong>Blood Group:</strong>
-            <span th:text="${match.donor.bloodGroup}"></span>
-        </p>
-
-        <p>
-            <strong>City:</strong>
-            <span th:text="${match.donor.city}"></span>
-        </p>
-
-        <h4>Blood Request Information</h4>
-
-        <p>
-            <strong>Requester:</strong>
-            <span th:text="${match.bloodRequest.requester.fullName}"></span>
-        </p>
-
-        <p>
-            <strong>Blood Group:</strong>
-            <span th:text="${match.bloodRequest.bloodGroup}"></span>
-        </p>
-
-        <p>
-            <strong>Hospital:</strong>
-            <span th:text="${match.bloodRequest.hospitalName}"></span>
-        </p>
-
-        <p>
-            <strong>Donor Response:</strong>
-            <span th:text="${match.donorResponse}"></span>
-        </p>
-
-        <p>
-            <strong>Donor Consent:</strong>
-            <span th:text="${match.donorConsent ? 'Given' : 'Not given'}"></span>
-        </p>
-
-        <p>
-            <strong>Consent Date:</strong>
-            <span th:text="${match.consentAt}"></span>
-        </p>
-
-        <hr>
-
-        <form th:action="@{/admin/disclosures/{id}/review(id=${match.id})}"
-              method="post">
-
-            <button type="submit"
-                    name="decision"
-                    value="APPROVED"
-                    class="approve">
-                Approve Contact Disclosure
-            </button>
-
-            <button type="submit"
-                    name="decision"
-                    value="REJECTED"
-                    class="reject">
-                Reject Contact Disclosure
-            </button>
-        </form>
-
+    <div class="hl-alert hl-alert-info" role="note">
+        <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>
+        <span>A requester sees a donor's name and phone number once the donor has accepted and consented, while the request is active and the donor is not deactivated. This page is read-only.</span>
     </div>
 
-    <p><a th:href="@{/admin/dashboard}">Back to Admin Dashboard</a></p>
+    <section class="hl-card">
+        <th:block th:if="${#lists.isEmpty(disclosures)}">
+            <th:block th:replace="~{fragments/ui :: empty('lock', 'No contact details shared yet', 'When a donor accepts a request and chooses to share their details, it is recorded here.')}"></th:block>
+        </th:block>
 
-</div>
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(disclosures)}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Request</th>
+                    <th scope="col">Donor</th>
+                    <th scope="col">Requester</th>
+                    <th scope="col">Hospital</th>
+                    <th scope="col">Shared</th>
+                    <th scope="col">Currently</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="match : ${disclosures}"
+                    th:with="requestActive=${match.bloodRequest.adminStatus.name() == 'PENDING'
+                                      or match.bloodRequest.adminStatus.name() == 'APPROVED'},
+                             active=${requestActive and match.donor.active}">
+                    <td data-label="Request">
+                        <a class="hl-strong-link" th:href="@{/admin/blood-requests/{id}(id=${match.bloodRequest.id})}"
+                           th:text="${@display.requestId(match.bloodRequest.id)}">REQ-0001</a>
+                    </td>
+                    <td data-label="Donor"><div>
+                        <a class="hl-strong-link" th:href="@{/admin/donors/{id}(id=${match.donor.id})}" th:text="${match.donor.user.fullName}">Donor</a>
+                        <span class="hl-blood hl-blood--sm" th:text="${match.donor.bloodGroup.label}">O+</span>
+                    </div></td>
+                    <td data-label="Requester" th:text="${match.bloodRequest.requester.fullName}">Requester</td>
+                    <td data-label="Hospital" th:text="${match.bloodRequest.hospitalName}">Hospital</td>
+                    <td data-label="Shared" th:text="${@display.dateTime(match.consentAt)}">-</td>
+                    <td data-label="Currently">
+                        <span class="hl-pill hl-pill--fulfilled" th:if="${active}">Visible</span>
+                        <span class="hl-pill hl-pill--closed" th:if="${!active and !requestActive}"
+                              th:text="${'Hidden: request ' + match.bloodRequest.adminStatus.label.toLowerCase()}">Hidden</span>
+                        <span class="hl-pill hl-pill--rejected" th:if="${requestActive and !match.donor.active}">Hidden: donor deactivated</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
 </body>
 </html>

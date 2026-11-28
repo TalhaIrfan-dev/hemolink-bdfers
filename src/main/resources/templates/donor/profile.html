@@ -1,82 +1,162 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donor Profile | HemoLink</title>
-</head>
+<!--
+    Donor Profile (Module 3.5, FR-04/FR-05/FR-06).
+    Date of birth and weight are private: never shown to requesters (NFR-03).
+    The guidance card is advisory only (D-01).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Donor Profile', 'donor-profile', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<h1>HemoLink</h1>
-<h2>Donor Profile</h2>
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Donor Profile</li>
+    </ol>
 
-<p th:if="${successMessage}" th:text="${successMessage}" style="color:green"></p>
-<p th:if="${errorMessage}" th:text="${errorMessage}" style="color:red"></p>
+    <div class="hl-page-heading">
+        <div>
+            <h1 th:text="${profileExists} ? 'Donor Profile' : 'Become a Donor'">Donor Profile</h1>
+            <p th:if="${profileExists}">Keep your details up to date so you are matched to the right requests.</p>
+            <p th:unless="${profileExists}">Set up your donor profile to be matched with compatible blood requests in your city.</p>
+        </div>
+        <div class="hl-page-heading-actions" th:if="${profileExists}">
+            <a class="hl-button hl-button-secondary" th:href="@{/donor/requests}">Matched Requests</a>
+        </div>
+    </div>
 
-<p th:if="${profileExists}">
-    Eligibility:
-    <strong th:text="${eligibilityStatus}"></strong>
-    <br>
-    <span th:text="${eligibilityReason}"></span>
-</p>
+    <th:block th:replace="~{fragments/ui :: deactivationNotice(${deactivationNotice})}"></th:block>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-<form th:action="@{/donor/profile}"
-      th:object="${profileRequest}" method="post">
+    <div class="hl-form-layout">
 
-    <label>Blood Group</label>
-    <select th:field="*{bloodGroup}" required>
-        <option value="">Select blood group</option>
-        <option th:each="group : ${bloodGroups}"
-                th:value="${group}"
-                th:text="${group}">
-        </option>
-    </select>
-    <small th:errors="*{bloodGroup}" style="color:red"></small>
+        <section class="hl-card" aria-labelledby="profileTitle">
+            <div class="hl-card-header">
+                <h2 id="profileTitle" class="hl-card-title">Your donor details</h2>
+            </div>
 
-    <br><br>
+            <form th:action="@{/donor/profile}" th:object="${profileRequest}" method="post"
+                  class="hl-form-grid" novalidate>
 
-    <label>City / Service Area</label>
-    <input type="text" th:field="*{city}" required>
-    <small th:errors="*{city}" style="color:red"></small>
+                <div class="hl-field">
+                    <label for="bloodGroup">Blood group <span class="hl-required" aria-hidden="true">*</span></label>
+                    <select id="bloodGroup" class="hl-select" th:field="*{bloodGroup}" required
+                            th:attr="aria-invalid=${#fields.hasErrors('bloodGroup')} ? 'true',
+                                     aria-describedby=${#fields.hasErrors('bloodGroup')} ? 'bloodGroupError'">
+                        <option value="">Select blood group</option>
+                        <option th:each="group : ${bloodGroups}" th:value="${group}" th:text="${group.label}">A+</option>
+                    </select>
+                    <span id="bloodGroupError" class="hl-field-error" th:if="${#fields.hasErrors('bloodGroup')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{bloodGroup}">Error</span>
+                    </span>
+                </div>
 
-    <br><br>
+                <div class="hl-field">
+                    <label for="city">City / service area <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="city" class="hl-input" type="text" maxlength="100" autocomplete="address-level2"
+                           th:field="*{city}" required
+                           th:attr="aria-invalid=${#fields.hasErrors('city')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('city')} ? 'cityError' : 'cityHint'">
+                    <span id="cityHint" class="hl-field-hint">You are matched to requests in this city.</span>
+                    <span id="cityError" class="hl-field-error" th:if="${#fields.hasErrors('city')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{city}">Error</span>
+                    </span>
+                </div>
 
-    <label>Date of Birth</label>
-    <input type="date" th:field="*{dateOfBirth}" required>
-    <small th:errors="*{dateOfBirth}" style="color:red"></small>
+                <div class="hl-field">
+                    <label for="dateOfBirth">Date of birth <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="dateOfBirth" class="hl-input" type="date" th:field="*{dateOfBirth}" required
+                           th:attr="aria-invalid=${#fields.hasErrors('dateOfBirth')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('dateOfBirth')} ? 'dobError' : 'privateHint'">
+                    <span id="dobError" class="hl-field-error" th:if="${#fields.hasErrors('dateOfBirth')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{dateOfBirth}">Error</span>
+                    </span>
+                </div>
 
-    <br><br>
+                <div class="hl-field">
+                    <label for="weight">Weight (kg) <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="weight" class="hl-input" type="number" step="0.01" min="1" max="500" inputmode="decimal"
+                           th:field="*{weight}" required
+                           th:attr="aria-invalid=${#fields.hasErrors('weight')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('weight')} ? 'weightError' : 'privateHint'">
+                    <span id="weightError" class="hl-field-error" th:if="${#fields.hasErrors('weight')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{weight}">Error</span>
+                    </span>
+                </div>
 
-    <label>Weight (kg)</label>
-    <input type="number" th:field="*{weight}"
-           step="0.01" min="1" max="500" required>
-    <small th:errors="*{weight}" style="color:red"></small>
+                <p id="privateHint" class="hl-form-span-2 hl-field-hint hl-privacy-note">
+                    <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>
+                    Date of birth and weight are private. Requesters never see them.
+                </p>
 
-    <br><br>
+                <div class="hl-field">
+                    <label for="lastDonationDate">Last donation date</label>
+                    <input id="lastDonationDate" class="hl-input" type="date" th:field="*{lastDonationDate}"
+                           th:attr="aria-invalid=${#fields.hasErrors('lastDonationDate')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('lastDonationDate')} ? 'lastError' : 'lastHint'">
+                    <span id="lastHint" class="hl-field-hint">Optional. Include donations made outside HemoLink.</span>
+                    <span id="lastError" class="hl-field-error" th:if="${#fields.hasErrors('lastDonationDate')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{lastDonationDate}">Error</span>
+                    </span>
+                </div>
 
-    <label>Last Donation Date (optional)</label>
-    <input type="date" th:field="*{lastDonationDate}">
-    <small th:errors="*{lastDonationDate}" style="color:red"></small>
+                <fieldset class="hl-field hl-fieldset">
+                    <legend>Availability <span class="hl-required" aria-hidden="true">*</span></legend>
+                    <div class="hl-segment">
+                        <label th:each="status : ${availabilityOptions}">
+                            <input type="radio" th:field="*{availability}" th:value="${status}">
+                            <span th:text="${status.label}">Available</span>
+                        </label>
+                    </div>
+                    <span class="hl-field-hint">Unavailable donors are not matched to new requests.</span>
+                    <span class="hl-field-error" th:if="${#fields.hasErrors('availability')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{availability}">Error</span>
+                    </span>
+                </fieldset>
 
-    <br><br>
+                <div class="hl-form-span-2 hl-action-row">
+                    <button class="hl-button hl-button-lg" type="submit"
+                            th:text="${profileExists} ? 'Save changes' : 'Create donor profile'">Save changes</button>
+                    <a class="hl-button hl-button-secondary hl-button-lg" th:href="@{/dashboard}">Cancel</a>
+                </div>
+            </form>
+        </section>
 
-    <label>Availability</label>
-    <select th:field="*{availability}" required>
-        <option th:each="status : ${availabilityOptions}"
-                th:value="${status}"
-                th:text="${status}">
-        </option>
-    </select>
-    <small th:errors="*{availability}" style="color:red"></small>
+        <aside class="hl-stack" aria-label="Donation guidance">
+            <section class="hl-card hl-advice" th:if="${advice != null}"
+                     th:classappend="${advice.ok} ? 'hl-advice--ok' : 'hl-advice--warn'"
+                     aria-labelledby="guidanceTitle">
+                <div class="hl-advice-head">
+                    <span class="hl-advice-icon">
+                        <th:block th:if="${advice.ok}"><th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block></th:block>
+                        <th:block th:unless="${advice.ok}"><th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block></th:block>
+                    </span>
+                    <div>
+                        <span class="hl-kpi-label">Donation guidance</span>
+                        <h2 id="guidanceTitle" th:text="${advice.level.label}">Looks OK</h2>
+                    </div>
+                </div>
+                <ul class="hl-advice-reasons" th:unless="${#lists.isEmpty(advice.reasons)}">
+                    <li th:each="reason : ${advice.reasons}" th:text="${reason}">Reason</li>
+                </ul>
+                <ul class="hl-advice-facts" th:unless="${#lists.isEmpty(advice.facts)}">
+                    <li th:each="fact : ${advice.facts}" th:text="${fact}">Fact</li>
+                </ul>
+                <p class="hl-field-hint">Guidance only, based on your profile. It never stops you from accepting. Haemoglobin is checked when you accept a request.</p>
+            </section>
 
-    <br><br>
-
-    <button type="submit">Save Donor Profile</button>
-</form>
-
-<br>
-<a th:href="@{/dashboard}">Back to Dashboard</a>
-
+            <section class="hl-card" aria-labelledby="privacyTitle">
+                <h2 id="privacyTitle" class="hl-card-title">
+                    <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>What requesters see
+                </h2>
+                <ul class="hl-steps hl-steps--plain">
+                    <li>Before you share: only "Potential donor", your blood group and city.</li>
+                    <li>After you accept <strong>and</strong> choose to share: your name and phone number.</li>
+                    <li>Never: your date of birth, weight or health answers.</li>
+                </ul>
+            </section>
+        </aside>
+    </div>
+</main>
 </body>
 </html>

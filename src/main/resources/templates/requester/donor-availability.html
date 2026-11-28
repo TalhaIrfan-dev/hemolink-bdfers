@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!--
+    Donor Availability (Module 3.4, D-05): anonymous counts of available
+    donors by blood group and city. No names or contact details.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Donor Availability', 'donor-availability', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Donor Availability</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1>Donor Availability</h1>
+            <p>Anonymous counts of donors who are available now, by blood group and city.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button" th:href="@{/requests/new}">
+                <th:block th:replace="~{fragments/icons :: icon('plus')}"></th:block>Create Blood Request
+            </a>
+        </div>
+    </div>
+
+    <div class="hl-alert hl-alert-info" role="note">
+        <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>
+        <span>Only counts are shown: no names or contact details. A donor still decides whether to accept a request.</span>
+    </div>
+
+    <section class="hl-card" aria-labelledby="availTableTitle">
+        <div class="hl-card-header">
+            <h2 id="availTableTitle" class="hl-card-title">Available donors by city</h2>
+            <form class="hl-inline-form" th:action="@{/requests/donor-availability}" method="get">
+                <label for="bloodGroup">Blood group you need</label>
+                <select id="bloodGroup" name="bloodGroup" class="hl-select-sm">
+                    <option value="">All groups</option>
+                    <option th:each="g : ${bloodGroups}" th:value="${g.name()}"
+                            th:selected="${view.neededGroup == g}" th:text="${g.label}">A+</option>
+                </select>
+                <button class="hl-button hl-button-secondary hl-button-sm" type="submit">Show</button>
+            </form>
+        </div>
+
+        <p class="hl-compat-note" th:if="${view.neededGroup != null}">
+            <span>Donors who can give to <strong th:text="${view.neededGroup.label}">A+</strong>:</span>
+            <span th:each="g : ${view.compatibleGroups}" class="hl-blood hl-blood--sm" th:text="${g.label}">O-</span>
+            <span class="muted">Their columns are highlighted.</span>
+        </p>
+
+        <th:block th:if="${#lists.isEmpty(view.rows)}">
+            <th:block th:replace="~{fragments/ui :: empty('users', 'No donors are available right now', 'You can still create a request: donors are matched as they become available.')}"></th:block>
+        </th:block>
+
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(view.rows)}">
+            <table class="hl-table hl-table--stack hl-avail-table">
+                <caption class="hl-visually-hidden">Available donors per city and blood group</caption>
+                <thead>
+                <tr>
+                    <th scope="col">City</th>
+                    <th scope="col" th:each="g : ${view.bloodGroups}"
+                        th:classappend="${view.compatibleGroups.contains(g)} ? 'is-compatible'"
+                        th:text="${g.label}">A+</th>
+                    <th scope="col">Total</th>
+                    <th scope="col" th:if="${view.neededGroup != null}"
+                        th:text="${'Can give to ' + view.neededGroup.label}">Can give to A+</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${view.rows}">
+                    <th scope="row" data-label="City" th:text="${row.city}">City</th>
+                    <td th:each="g : ${view.bloodGroups}" th:with="n=${row.count(g)}"
+                        th:attr="data-label=${g.label}"
+                        th:classappend="${(view.compatibleGroups.contains(g) ? 'is-compatible ' : '') + (n == 0 ? 'is-zero' : '')}"
+                        th:text="${n}">0</td>
+                    <td data-label="Total" class="hl-strong" th:text="${row.total}">0</td>
+                    <td th:if="${view.neededGroup != null}" class="hl-avail-highlight"
+                        th:attr="data-label=${'Can give to ' + view.neededGroup.label}"
+                        th:text="${row.compatibleCount}">0</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th scope="row" data-label="">All cities</th>
+                    <td th:each="g : ${view.bloodGroups}" th:attr="data-label=${g.label}"
+                        th:classappend="${view.compatibleGroups.contains(g)} ? 'is-compatible'"
+                        th:text="${view.totalFor(g)}">0</td>
+                    <td data-label="Total" th:text="${view.grandTotal}">0</td>
+                    <td th:if="${view.neededGroup != null}" data-label=""></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

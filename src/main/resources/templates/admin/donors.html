@@ -1,92 +1,136 @@
-
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>HemoLink | Donor Review</title>
-</head>
+<!--
+    Admin: Donor Directory (Module 3.6, FR-17, D-05). Full donor details are
+    administrator-only; requesters see anonymous counts. 20 per page.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Donor Directory', 'admin-donors', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<h1>HemoLink</h1>
-<h2>Donor Eligibility Review</h2>
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li aria-current="page">Donor Directory</li>
+    </ol>
 
-<p th:if="${successMessage}"
-   th:text="${successMessage}"
-   style="color: green;"></p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Donor Directory</h1>
+            <p>Every registered donor, with contact details, availability and profile status.</p>
+        </div>
+    </div>
 
-<p th:if="${errorMessage}"
-   th:text="${errorMessage}"
-   style="color: red;"></p>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-<table border="1" cellpadding="10">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Blood Group</th>
-        <th>City</th>
-        <th>Date of Birth</th>
-        <th>Weight</th>
-        <th>Last Donation</th>
-        <th>Availability</th>
-        <th>Eligibility</th>
-        <th>Review</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    <tr th:each="donor : ${donors}">
-        <td th:text="${donor.user.fullName}"></td>
-        <td th:text="${donor.user.email}"></td>
-        <td th:text="${donor.bloodGroup}"></td>
-        <td th:text="${donor.city}"></td>
-        <td th:text="${donor.dateOfBirth}"></td>
-        <td th:text="${donor.weight}"></td>
-        <td th:text="${donor.lastDonationDate != null
-            ? donor.lastDonationDate : 'Not provided'}"></td>
-        <td th:text="${donor.availability}"></td>
-        <td>
-            <strong th:text="${donor.eligibilityStatus}"></strong>
-            <p th:text="${donor.eligibilityReason}"></p>
-        </td>
-        <td>
-            <form th:action="@{/admin/donors/{id}/eligibility(id=${donor.id})}"
-                  method="post">
-
-                <label>Decision</label>
-                <select name="decision" required>
-                    <option value="ELIGIBLE">Approve</option>
-                    <option value="INELIGIBLE">Mark Ineligible</option>
-                </select>
-
-                <br><br>
-
-                <label>Review Reason</label>
-                <textarea name="reason"
-                          required
-                          minlength="3"
-                          maxlength="500"></textarea>
-
-                <br><br>
-
-                <button type="submit">Save Review</button>
+    <section class="hl-card">
+        <details class="hl-filters" open data-collapse-mobile>
+            <summary><th:block th:replace="~{fragments/icons :: icon('filter')}"></th:block>Search and filters</summary>
+            <form class="hl-filter-bar" th:action="@{/admin/donors}" method="get" role="search" aria-label="Search donors">
+                <div class="hl-field hl-field-search">
+                    <label for="q">Search</label>
+                    <input id="q" class="hl-input" type="search" name="q" th:value="${q}" placeholder="Name, email or phone">
+                </div>
+                <div class="hl-field">
+                    <label for="bloodGroup">Blood group</label>
+                    <select id="bloodGroup" name="bloodGroup" class="hl-select">
+                        <option value="">All</option>
+                        <option th:each="g : ${bloodGroups}" th:value="${g.name()}"
+                                th:selected="${bloodGroupFilter == g}" th:text="${g.label}">A+</option>
+                    </select>
+                </div>
+                <div class="hl-field">
+                    <label for="city">City</label>
+                    <select id="city" name="city" class="hl-select">
+                        <option value="">All</option>
+                        <option th:each="c : ${cities}" th:value="${c}"
+                                th:selected="${#strings.equalsIgnoreCase(cityFilter, c)}" th:text="${c}">City</option>
+                    </select>
+                </div>
+                <div class="hl-field">
+                    <label for="availability">Availability</label>
+                    <select id="availability" name="availability" class="hl-select">
+                        <option value="">All</option>
+                        <option th:each="a : ${availabilityOptions}" th:value="${a.name()}"
+                                th:selected="${availabilityFilter == a}" th:text="${a.label}">Available</option>
+                    </select>
+                </div>
+                <div class="hl-field">
+                    <label for="status">Profile</label>
+                    <select id="status" name="status" class="hl-select">
+                        <option value="ALL" th:selected="${statusFilter == 'ALL'}">All</option>
+                        <option value="ACTIVE" th:selected="${statusFilter == 'ACTIVE'}">Active</option>
+                        <option value="DEACTIVATED" th:selected="${statusFilter == 'DEACTIVATED'}">Deactivated</option>
+                    </select>
+                </div>
+                <div class="hl-filter-actions">
+                    <button class="hl-button" type="submit">
+                        <th:block th:replace="~{fragments/icons :: icon('search')}"></th:block>Search
+                    </button>
+                    <a class="hl-button hl-button-secondary" th:href="@{/admin/donors}">Reset</a>
+                </div>
             </form>
+        </details>
 
-            <p th:if="${donor.eligibilityReviewedAt != null}">
-                Reviewed:
-                <span th:text="${donor.eligibilityReviewedAt}"></span>
-            </p>
-        </td>
-    </tr>
+        <div class="hl-list-summary">
+            <strong th:text="${donors.totalElements + (donors.totalElements == 1 ? ' donor' : ' donors')}">0 donors</strong>
+            <span class="muted">Advisory eligibility is shown on each donor's page.</span>
+        </div>
 
-    <tr th:if="${#lists.isEmpty(donors)}">
-        <td colspan="10">No donor profiles found.</td>
-    </tr>
-    </tbody>
-</table>
+        <th:block th:if="${donors.empty}">
+            <th:block th:replace="~{fragments/ui :: empty('users', 'No donors match these filters', 'Change the search or reset the filters.')}"></th:block>
+        </th:block>
 
-<br>
-<a th:href="@{/admin/dashboard}">Back to Admin Dashboard</a>
+        <div class="hl-table-wrap" th:unless="${donors.empty}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Donor</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">Blood Group</th>
+                    <th scope="col">City</th>
+                    <th scope="col">Age</th>
+                    <th scope="col">Last donation</th>
+                    <th scope="col">Availability</th>
+                    <th scope="col">Profile</th>
+                    <th scope="col"><span class="hl-visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${donors.content}">
+                    <td data-label="Donor"><div class="hl-person">
+                        <span class="hl-avatar hl-avatar--sm" aria-hidden="true"
+                              th:text="${#strings.isEmpty(d.user.fullName) ? '?' : #strings.toUpperCase(#strings.substring(d.user.fullName, 0, 1))}">A</span>
+                        <div>
+                            <a class="hl-strong-link" th:href="@{/admin/donors/{id}(id=${d.id})}" th:text="${d.user.fullName}">Name</a>
+                            <span class="hl-table-sub" th:text="${d.user.email}">email</span>
+                        </div>
+                    </div></td>
+                    <td data-label="Phone" th:text="${d.user.phone}">phone</td>
+                    <td data-label="Blood Group"><span class="hl-blood" th:text="${d.bloodGroup.label}">A+</span></td>
+                    <td data-label="City" th:text="${d.city}">City</td>
+                    <td data-label="Age" th:text="${@display.age(d.dateOfBirth)}">30</td>
+                    <td data-label="Last donation" th:text="${d.lastDonationDate != null ? @display.date(d.lastDonationDate) : 'None recorded'}">-</td>
+                    <td data-label="Availability">
+                        <span class="hl-pill" th:classappend="${d.availability.name() == 'AVAILABLE'} ? 'hl-pill--fulfilled' : 'hl-pill--closed'"
+                              th:text="${d.availability.label}">Available</span>
+                    </td>
+                    <td data-label="Profile">
+                        <span class="hl-pill hl-pill--approved" th:if="${d.active}">Active</span>
+                        <span class="hl-pill hl-pill--rejected" th:unless="${d.active}">Deactivated</span>
+                    </td>
+                    <td data-label="">
+                        <a class="hl-button hl-button-secondary hl-button-sm" th:href="@{/admin/donors/{id}(id=${d.id})}"
+                           th:attr="aria-label=${'Open ' + d.user.fullName}">Open</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
+        <th:block th:replace="~{fragments/ui :: pager(${donors},
+                 @{/admin/donors(q=${q}, bloodGroup=${bloodGroupFilter != null ? bloodGroupFilter.name() : ''}, city=${cityFilter}, availability=${availabilityFilter != null ? availabilityFilter.name() : ''}, status=${statusFilter}, page=${donors.number - 1})},
+                 @{/admin/donors(q=${q}, bloodGroup=${bloodGroupFilter != null ? bloodGroupFilter.name() : ''}, city=${cityFilter}, availability=${availabilityFilter != null ? availabilityFilter.name() : ''}, status=${statusFilter}, page=${donors.number + 1})})}"></th:block>
+    </section>
+</main>
 </body>
 </html>

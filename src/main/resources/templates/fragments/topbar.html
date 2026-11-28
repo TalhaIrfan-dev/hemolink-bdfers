@@ -1,23 +1,53 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
+<!-- Top bar (Module 3.1): menu toggle, quick search, notification bell, user menu. -->
 <header th:fragment="topbar" class="hl-topbar">
     <div class="hl-topbar-left">
-        <button id="hlMenuToggle" class="hl-menu-toggle" type="button" aria-label="Open navigation menu" aria-controls="hlSidebar">☰</button>
+        <button id="hlMenuToggle" class="hl-menu-toggle" type="button"
+                aria-label="Open navigation menu" aria-controls="hlSidebar" aria-expanded="false">
+            <th:block th:replace="~{fragments/icons :: icon('menu')}"></th:block>
+        </button>
         <label class="hl-search" for="hlQuickSearch">
-            <span aria-hidden="true">⌕</span>
-            <input id="hlQuickSearch" type="search" placeholder="Search menu pages..." autocomplete="off">
+            <th:block th:replace="~{fragments/icons :: icon('search')}"></th:block>
+            <span class="hl-visually-hidden">Search pages</span>
+            <input id="hlQuickSearch" type="search" placeholder="Search pages…" autocomplete="off">
         </label>
     </div>
     <div class="hl-topbar-right">
-        <div class="hl-user">
-            <span class="hl-avatar" aria-hidden="true">HL</span>
-            <span>
-                <span class="hl-user-email" sec:authentication="name">user@example.com</span>
-                <span class="hl-user-role" sec:authorize="hasRole('ADMIN')">Administrator</span>
-                <span class="hl-user-role" sec:authorize="hasRole('USER')">HemoLink Member</span>
-            </span>
-        </div>
+        <!-- FR-13: notification bell with unread count -->
+        <a class="hl-bell" th:href="@{/notifications}"
+           th:attr="aria-label=${unreadNotificationCount > 0
+                    ? 'Notifications, ' + unreadNotificationCount + ' unread'
+                    : 'Notifications'}">
+            <th:block th:replace="~{fragments/icons :: icon('bell')}"></th:block>
+            <span class="hl-bell-count" th:if="${unreadNotificationCount > 0}"
+                  th:text="${unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}">3</span>
+        </a>
+
+        <details class="hl-user-menu" th:if="${currentUser != null}">
+            <summary class="hl-user" aria-label="Account menu">
+                <span class="hl-avatar" aria-hidden="true" th:text="${currentUser.initials}">AK</span>
+                <span class="hl-user-text">
+                    <span class="hl-user-name" th:text="${currentUser.fullName}">Ayesha Khan</span>
+                    <span class="hl-user-role" th:text="${currentUser.roleLabel}">Donor &amp; Requester</span>
+                </span>
+                <th:block th:replace="~{fragments/icons :: icon('chevron-down')}"></th:block>
+            </summary>
+            <div class="hl-menu" role="menu">
+                <a class="hl-menu-item" role="menuitem" th:href="@{/account}">
+                    <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>Account Settings
+                </a>
+                <a class="hl-menu-item" role="menuitem" th:href="@{/notifications}">
+                    <th:block th:replace="~{fragments/icons :: icon('bell')}"></th:block>Notifications
+                </a>
+                <form th:action="@{/logout}" method="post">
+                    <button class="hl-menu-item" role="menuitem" type="submit">
+                        <th:block th:replace="~{fragments/icons :: icon('logout')}"></th:block>Logout
+                    </button>
+                </form>
+            </div>
+        </details>
     </div>
 </header>
 </body>
