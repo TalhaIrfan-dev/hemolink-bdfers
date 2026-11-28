@@ -1,218 +1,124 @@
-
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Request Review | HemoLink</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .review-container {
-            max-width: 1200px;
-            margin: 35px auto;
-            padding: 20px;
-        }
-
-        .request-card {
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background: white;
-        }
-
-        .request-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin: 18px 0;
-        }
-
-        .detail-label {
-            color: #777;
-            font-size: 13px;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .critical {
-            color: #dc2626;
-            font-weight: bold;
-        }
-
-        .normal {
-            color: #2563eb;
-            font-weight: bold;
-        }
-
-        .approve-btn, .reject-btn {
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-            margin-right: 8px;
-        }
-
-        .approve-btn {
-            background: #15803d;
-        }
-
-        .reject-btn {
-            background: #dc2626;
-        }
-
-        .reason-input {
-            padding: 9px;
-            width: min(100%, 350px);
-            margin: 8px 0;
-        }
-
-        .message {
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-        }
-
-        .success {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-    </style>
-</head>
-
+<!--
+    Admin: Blood Requests (Module 3.6, FR-16). Default view is the Pending
+    review queue (Critical first, then oldest). 20 per page.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Blood Requests', 'admin-requests', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<div class="review-container">
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li aria-current="page">Blood Requests</li>
+    </ol>
 
-    <h1>Blood Request Review</h1>
-    <p>Review and approve or reject submitted blood requests.</p>
-
-    <div th:if="${successMessage}"
-         class="message success"
-         th:text="${successMessage}"></div>
-
-    <div th:if="${errorMessage}"
-         class="message error"
-         th:text="${errorMessage}"></div>
-
-    <div th:if="${#lists.isEmpty(bloodRequests)}">
-        <p>No pending blood requests require review.</p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Blood Requests</h1>
+            <p>Review Normal requests, follow Critical ones, and close requests that are no longer needed.</p>
+        </div>
     </div>
 
-    <div th:each="request : ${bloodRequests}"
-         class="request-card">
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-        <h3>
-            Request #<span th:text="${request.id}"></span>
-        </h3>
+    <section class="hl-card">
+        <!-- FR-16: filter by status, urgency and city -->
+        <details class="hl-filters" open data-collapse-mobile>
+            <summary><th:block th:replace="~{fragments/icons :: icon('filter')}"></th:block>Filters</summary>
+            <form class="hl-filter-bar" th:action="@{/admin/blood-requests}" method="get" role="search" aria-label="Filter blood requests">
+                <div class="hl-field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="hl-select">
+                        <option value="ALL" th:selected="${statusFilter == 'ALL'}">All statuses</option>
+                        <option th:each="s : ${statuses}" th:value="${s.name()}"
+                                th:selected="${statusFilter == s.name()}" th:text="${s.label}">Pending</option>
+                    </select>
+                </div>
+                <div class="hl-field">
+                    <label for="urgency">Urgency</label>
+                    <select id="urgency" name="urgency" class="hl-select">
+                        <option value="">All urgencies</option>
+                        <option th:each="u : ${urgencies}" th:value="${u.name()}"
+                                th:selected="${urgencyFilter == u}" th:text="${u.label}">Critical</option>
+                    </select>
+                </div>
+                <div class="hl-field">
+                    <label for="city">City</label>
+                    <select id="city" name="city" class="hl-select">
+                        <option value="">All cities</option>
+                        <option th:each="c : ${cities}" th:value="${c}"
+                                th:selected="${#strings.equalsIgnoreCase(cityFilter, c)}" th:text="${c}">City</option>
+                    </select>
+                </div>
+                <div class="hl-filter-actions">
+                    <button class="hl-button" type="submit">
+                        <th:block th:replace="~{fragments/icons :: icon('filter')}"></th:block>Apply
+                    </button>
+                    <a class="hl-button hl-button-secondary" th:href="@{/admin/blood-requests}">Reset</a>
+                </div>
+            </form>
+        </details>
 
-        <div class="request-details">
-
-            <div>
-                <div class="detail-label">Requester</div>
-                <div class="detail-value"
-                     th:text="${request.requester.fullName}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Blood Group</div>
-                <div class="detail-value"
-                     th:text="${request.bloodGroup}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Units Required</div>
-                <div class="detail-value"
-                     th:text="${request.unitsRequired}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">City</div>
-                <div class="detail-value"
-                     th:text="${request.city}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Hospital</div>
-                <div class="detail-value"
-                     th:text="${request.hospitalName}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Required At</div>
-                <div class="detail-value"
-                     th:text="${#temporals.format(request.requiredAt, 'dd MMM yyyy HH:mm')}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Urgency</div>
-                <div class="detail-value"
-                     th:classappend="${request.urgency.name() == 'CRITICAL'} ? 'critical' : 'normal'"
-                     th:text="${request.urgency}"></div>
-            </div>
-
-            <div>
-                <div class="detail-label">Matching Status</div>
-                <div class="detail-value"
-                     th:text="${request.matchingStatus}"></div>
-            </div>
-
+        <div class="hl-list-summary">
+            <strong th:text="${requests.totalElements + (requests.totalElements == 1 ? ' request' : ' requests')}">0 requests</strong>
+            <span class="muted" th:if="${statusFilter == 'PENDING'}">
+                Review queue: Critical first, then oldest first. Critical requests are already matched; reviewing them is optional.
+            </span>
         </div>
 
-        <form th:action="@{/admin/blood-requests/{id}/review(id=${request.id})}"
-              method="post">
+        <th:block th:if="${requests.empty}">
+            <th:block th:replace="~{fragments/ui :: empty('search', 'No blood requests match these filters', 'Change the filters or choose All statuses.')}"></th:block>
+        </th:block>
 
-            <input type="hidden"
-                   th:name="${_csrf.parameterName}"
-                   th:value="${_csrf.token}">
+        <div class="hl-table-wrap" th:unless="${requests.empty}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Request</th>
+                    <th scope="col">Urgency</th>
+                    <th scope="col">Blood Group</th>
+                    <th scope="col">Units</th>
+                    <th scope="col">Hospital</th>
+                    <th scope="col">Requester</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="hl-visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${requests.content}">
+                    <td data-label="Request"><div>
+                        <a class="hl-strong-link" th:href="@{/admin/blood-requests/{id}(id=${r.id})}"
+                           th:text="${@display.requestId(r.id)}">REQ-0001</a>
+                        <span class="hl-table-sub" th:text="${@display.dateTime(r.createdAt)}">26 Nov 2026, 10:00</span>
+                    </div></td>
+                    <td data-label="Urgency"><th:block th:replace="~{fragments/ui :: urgencyPill(${r.urgency})}"></th:block></td>
+                    <td data-label="Blood Group"><span class="hl-blood" th:text="${r.bloodGroup.label}">A+</span></td>
+                    <td data-label="Units" th:text="${(r.fulfilledUnits == null ? 0 : r.fulfilledUnits) + ' of ' + r.unitsRequired}">0 of 2</td>
+                    <td data-label="Hospital"><div>
+                        <span th:text="${r.hospitalName}">Hospital</span>
+                        <span class="hl-table-sub" th:text="${r.city}">City</span>
+                    </div></td>
+                    <td data-label="Requester" th:text="${r.requester.fullName}">Requester</td>
+                    <td data-label="Status"><div class="hl-pill-stack">
+                        <th:block th:replace="~{fragments/ui :: statusPill(${r.adminStatus})}"></th:block>
+                        <span class="hl-pill hl-pill--pending"
+                              th:if="${r.adminStatus.name() == 'PENDING' and r.urgency.name() == 'CRITICAL'}">Not reviewed</span>
+                    </div></td>
+                    <td data-label="">
+                        <a class="hl-button hl-button-secondary hl-button-sm"
+                           th:href="@{/admin/blood-requests/{id}(id=${r.id})}"
+                           th:attr="aria-label=${'Open ' + @display.requestId(r.id)}">Open</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-            <button type="submit"
-                    name="decision"
-                    value="APPROVED"
-                    class="approve-btn">
-                Approve Request
-            </button>
-
-        </form>
-
-        <form th:action="@{/admin/blood-requests/{id}/review(id=${request.id})}"
-              method="post"
-              onsubmit="return confirm('Are you sure you want to reject this request?');">
-
-            <input type="hidden"
-                   th:name="${_csrf.parameterName}"
-                   th:value="${_csrf.token}">
-
-            <input type="hidden"
-                   name="decision"
-                   value="REJECTED">
-
-            <input type="text"
-                   name="rejectionReason"
-                   class="reason-input"
-                   placeholder="Reason for rejection"
-                   required>
-
-            <button type="submit" class="reject-btn">
-                Reject Request
-            </button>
-
-        </form>
-
-    </div>
-
-    <a th:href="@{/admin/dashboard}">Back to Admin Dashboard</a>
-
-</div>
-
+        <th:block th:replace="~{fragments/ui :: pager(${requests},
+                 @{/admin/blood-requests(status=${statusFilter}, urgency=${urgencyFilter != null ? urgencyFilter.name() : ''}, city=${cityFilter}, page=${requests.number - 1})},
+                 @{/admin/blood-requests(status=${statusFilter}, urgency=${urgencyFilter != null ? urgencyFilter.name() : ''}, city=${cityFilter}, page=${requests.number + 1})})}"></th:block>
+    </section>
+</main>
 </body>
 </html>

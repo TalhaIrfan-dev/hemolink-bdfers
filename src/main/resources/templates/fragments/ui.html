@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+    Reusable UI fragments (Module 3.1). Examples are on /admin/ui-kit.
+-->
+
+<!-- Status pill for any status enum with getLabel(), e.g. RequestAdminStatus.
+     <th:block th:replace="~{fragments/ui :: statusPill(${request.adminStatus})}"></th:block> -->
+<span th:fragment="statusPill(status)" class="hl-pill"
+      th:classappend="${status == null ? '' : 'hl-pill--' + #strings.toLowerCase(status.name())}"
+      th:text="${status == null ? '-' : status.label}">Pending</span>
+
+<!-- Urgency pill with icon: Critical (red, bolt) or Normal (green). -->
+<span th:fragment="urgencyPill(urgency)" class="hl-pill"
+      th:classappend="${urgency != null and urgency.name() == 'CRITICAL'} ? 'hl-pill--critical' : 'hl-pill--normal'">
+    <th:block th:if="${urgency != null and urgency.name() == 'CRITICAL'}"><th:block th:replace="~{fragments/icons :: icon('bolt')}"></th:block></th:block>
+    <th:block th:unless="${urgency != null and urgency.name() == 'CRITICAL'}"><th:block th:replace="~{fragments/icons :: icon('user')}"></th:block></th:block>
+    <span th:text="${urgency == null ? '-' : urgency.label}">Critical</span>
+</span>
+
+<!-- Blood group badge, e.g. A+. -->
+<span th:fragment="bloodGroup(group)" class="hl-blood"
+      th:text="${group == null ? '-' : group.label}">A+</span>
+
+<!-- Empty state. icon = icon name, title and text are strings. -->
+<div th:fragment="empty(icon, title, text)" class="hl-state hl-state--empty" role="status">
+    <span class="hl-state-icon"><th:block th:replace="~{fragments/icons :: icon(${icon})}"></th:block></span>
+    <strong class="hl-state-title" th:text="${title}">Nothing here yet</strong>
+    <p class="muted" th:if="${text != null}" th:text="${text}">Description</p>
+</div>
+
+<!-- Pager for a Spring Page. Pass the page and the full previous/next URLs
+     (build them with @{...} in the page so filters are kept). -->
+<nav th:fragment="pager(page, prevUrl, nextUrl)" class="hl-pagination"
+     th:if="${page.totalPages > 1}" aria-label="Pagination">
+    <a class="hl-button hl-button-secondary hl-button-sm" th:if="${page.hasPrevious()}" th:href="${prevUrl}">
+        <th:block th:replace="~{fragments/icons :: icon('chevron-left')}"></th:block>Previous
+    </a>
+    <span class="hl-pagination-info"
+          th:text="${'Page ' + (page.number + 1) + ' of ' + page.totalPages + ' · ' + page.totalElements + ' total'}">Page 1 of 3</span>
+    <a class="hl-button hl-button-secondary hl-button-sm" th:if="${page.hasNext()}" th:href="${nextUrl}">
+        Next<th:block th:replace="~{fragments/icons :: icon('chevron-right')}"></th:block>
+    </a>
+</nav>
+
+<!-- Flash messages (success / error). -->
+<div th:fragment="alerts" class="hl-alerts">
+    <div class="hl-alert hl-alert-success" th:if="${successMessage}" role="status">
+        <th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block>
+        <span th:text="${successMessage}">Saved.</span>
+    </div>
+    <div class="hl-alert hl-alert-error" th:if="${errorMessage}" role="alert">
+        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>
+        <span th:text="${errorMessage}">Something went wrong.</span>
+    </div>
+</div>
+
+<!-- Password input with a show/hide button. field = form field name. -->
+<div th:fragment="passwordInput(id, name, autocomplete)" class="hl-password">
+    <input class="hl-input" type="password" th:id="${id}" th:name="${name}"
+           th:attr="autocomplete=${autocomplete}" required>
+    <button type="button" class="hl-password-toggle" th:attr="data-toggle-password=${id}"
+            aria-label="Show password" aria-pressed="false">
+        <span class="hl-when-hidden"><th:block th:replace="~{fragments/icons :: icon('eye')}"></th:block></span>
+        <span class="hl-when-shown"><th:block th:replace="~{fragments/icons :: icon('eye-off')}"></th:block></span>
+    </button>
+</div>
+
+<!-- Donor deactivated by an administrator (FR-17, SCR-14). notice may be null. -->
+<div th:fragment="deactivationNotice(notice)" th:if="${notice != null}" class="hl-alert hl-alert-error" role="alert">
+    <th:block th:replace="~{fragments/icons :: icon('x-circle')}"></th:block>
+    <div>
+        <strong>Your donor profile has been deactivated by an administrator<span
+                th:if="${notice.deactivatedAt != null}"
+                th:text="${' on ' + @display.date(notice.deactivatedAt.toLocalDate())}"></span>.</strong>
+        <div th:if="${notice.reason != null}" th:text="${'Reason: ' + notice.reason}">Reason</div>
+        <div>While deactivated you are not matched to new requests and cannot respond to existing ones.
+            Contact the administrator if you think this is a mistake.</div>
+    </div>
+</div>
+</body>
+</html>

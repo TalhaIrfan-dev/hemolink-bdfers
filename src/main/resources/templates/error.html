@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+    Error page (Module 3.7): 400, 403, 404, 409 and 500 from
+    GlobalExceptionHandler, /access-denied and Spring Boot's error view.
+    Stand-alone (no sidebar) so it also works for signed-out visitors.
+    Never shows stack traces or internal messages.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${(errorTitle != null ? errorTitle : 'Error') + ' | HemoLink'}">Error | HemoLink</title>
+    <link rel="stylesheet" th:href="@{/css/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+</head>
+<body class="hl-error-body">
+<main class="hl-error-page"
+      th:with="code=${status != null ? status : 500},
+               title=${errorTitle != null ? errorTitle
+                     : (code == 404 ? 'Page not found'
+                     : (code == 403 ? 'Access denied'
+                     : (code >= 500 ? 'Something went wrong' : 'Request could not be processed')))},
+               detail=${errorDetail != null ? errorDetail
+                     : (code == 404 ? 'The page you are looking for does not exist.'
+                     : (code == 403 ? 'You do not have permission to view this page.'
+                     : (code >= 500 ? 'An unexpected error occurred. Please try again later.'
+                     : 'Please go back and try again.')))}">
+
+    <a class="hl-error-brand" th:href="@{/}" aria-label="HemoLink home">
+        <th:block th:replace="~{fragments/icons :: logo}"></th:block>
+        <span>HemoLink</span>
+    </a>
+
+    <section class="hl-card hl-error-card" role="alert" aria-labelledby="errorTitle">
+        <div class="hl-error-code" th:classappend="${code == 409 or code == 400} ? 'is-warning' : (${code == 403 or code == 404} ? 'is-info' : '')">
+            <th:block th:if="${code == 404}"><th:block th:replace="~{fragments/icons :: icon('search')}"></th:block></th:block>
+            <th:block th:if="${code == 403}"><th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block></th:block>
+            <th:block th:if="${code != 404 and code != 403}"><th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block></th:block>
+        </div>
+        <p class="hl-error-number" th:text="${'Error ' + code}">Error 500</p>
+        <h1 id="errorTitle" th:text="${title}">Something went wrong</h1>
+        <p class="muted" th:text="${detail}">An unexpected error occurred.</p>
+        <div class="hl-action-row">
+            <a class="hl-button" th:href="@{/}" sec:authorize="isAuthenticated()">
+                <th:block th:replace="~{fragments/icons :: icon('home')}"></th:block>Go to Dashboard
+            </a>
+            <a class="hl-button" th:href="@{/login}" sec:authorize="!isAuthenticated()">Sign in</a>
+            <button class="hl-button hl-button-secondary" type="button" onclick="history.back()">Go back</button>
+        </div>
+    </section>
+</main>
+</body>
+</html>

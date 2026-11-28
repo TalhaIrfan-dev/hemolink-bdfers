@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!--
+    Account Settings (Module 3.7, FR-01/FR-02, NFR-02).
+    Email is the login ID and cannot be changed. Password change requires
+    the current password (checked on the server).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Account Settings', 'account', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Account Settings</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div class="hl-person hl-person--lg">
+            <span class="hl-avatar" aria-hidden="true" th:text="${currentUser != null ? currentUser.initials : '?'}">AK</span>
+            <div>
+                <h1>Account Settings</h1>
+                <p>
+                    <span th:text="${account.email}">email</span>
+                    <span th:if="${currentUser != null}" th:text="${' · ' + currentUser.roleLabel}"> · Donor &amp; Requester</span>
+                    <span th:if="${account.createdAt != null}" th:text="${' · Member since ' + @display.date(account.createdAt.toLocalDate())}"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
+
+    <div class="hl-dashboard-grid-even">
+
+        <section class="hl-card" aria-labelledby="detailsTitle">
+            <div class="hl-card-header">
+                <h2 id="detailsTitle" class="hl-card-title">Your details</h2>
+            </div>
+            <form th:action="@{/account/profile}" th:object="${profileForm}" method="post" class="hl-stack" novalidate>
+                <div class="hl-field">
+                    <label for="email">Email (login)</label>
+                    <input id="email" class="hl-input" type="email" th:value="${account.email}" readonly aria-describedby="emailHint">
+                    <span id="emailHint" class="hl-field-hint">Your email is your login ID and cannot be changed.</span>
+                </div>
+                <div class="hl-field">
+                    <label for="fullName">Full name <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="fullName" class="hl-input" type="text" th:field="*{fullName}" maxlength="100" autocomplete="name" required
+                           th:attr="aria-invalid=${#fields.hasErrors('fullName')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('fullName')} ? 'fullNameError'">
+                    <span id="fullNameError" class="hl-field-error" th:if="${#fields.hasErrors('fullName')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{fullName}">Error</span>
+                    </span>
+                </div>
+                <div class="hl-field">
+                    <label for="phone">Phone number <span class="hl-required" aria-hidden="true">*</span></label>
+                    <input id="phone" class="hl-input" type="tel" th:field="*{phone}" autocomplete="tel" inputmode="tel" required
+                           th:attr="aria-invalid=${#fields.hasErrors('phone')} ? 'true',
+                                    aria-describedby=${#fields.hasErrors('phone')} ? 'phoneError' : 'phoneHint'">
+                    <span id="phoneHint" class="hl-field-hint">03XXXXXXXXX or +923XXXXXXXXX. If you are a donor, this is the number shared when you choose to share your contact details.</span>
+                    <span id="phoneError" class="hl-field-error" th:if="${#fields.hasErrors('phone')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{phone}">Error</span>
+                    </span>
+                </div>
+                <div><button class="hl-button" type="submit">Save details</button></div>
+            </form>
+        </section>
+
+        <section class="hl-card" aria-labelledby="passwordTitle">
+            <div class="hl-card-header">
+                <h2 id="passwordTitle" class="hl-card-title">
+                    <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>Change password
+                </h2>
+            </div>
+            <form th:action="@{/account/password}" th:object="${passwordForm}" method="post" class="hl-stack" autocomplete="off" novalidate>
+                <div class="hl-field">
+                    <label for="currentPassword">Current password <span class="hl-required" aria-hidden="true">*</span></label>
+                    <div class="hl-password">
+                        <input id="currentPassword" class="hl-input" type="password" th:field="*{currentPassword}" autocomplete="current-password" required
+                               th:attr="aria-invalid=${#fields.hasErrors('currentPassword')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('currentPassword')} ? 'currentError'">
+                        <button type="button" class="hl-password-toggle" data-toggle-password="currentPassword" aria-label="Show password" aria-pressed="false">
+                            <span class="hl-when-hidden"><th:block th:replace="~{fragments/icons :: icon('eye')}"></th:block></span>
+                            <span class="hl-when-shown"><th:block th:replace="~{fragments/icons :: icon('eye-off')}"></th:block></span>
+                        </button>
+                    </div>
+                    <span id="currentError" class="hl-field-error" th:if="${#fields.hasErrors('currentPassword')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{currentPassword}">Error</span>
+                    </span>
+                </div>
+                <div class="hl-field">
+                    <label for="newPassword">New password <span class="hl-required" aria-hidden="true">*</span></label>
+                    <div class="hl-password">
+                        <input id="newPassword" class="hl-input" type="password" th:field="*{newPassword}" minlength="8" maxlength="72" autocomplete="new-password" required
+                               th:attr="aria-invalid=${#fields.hasErrors('newPassword')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('newPassword')} ? 'newError' : 'newHint'">
+                        <button type="button" class="hl-password-toggle" data-toggle-password="newPassword" aria-label="Show password" aria-pressed="false">
+                            <span class="hl-when-hidden"><th:block th:replace="~{fragments/icons :: icon('eye')}"></th:block></span>
+                            <span class="hl-when-shown"><th:block th:replace="~{fragments/icons :: icon('eye-off')}"></th:block></span>
+                        </button>
+                    </div>
+                    <span id="newHint" class="hl-field-hint">At least 8 characters.</span>
+                    <span id="newError" class="hl-field-error" th:if="${#fields.hasErrors('newPassword')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{newPassword}">Error</span>
+                    </span>
+                </div>
+                <div class="hl-field">
+                    <label for="confirmPassword">New password again <span class="hl-required" aria-hidden="true">*</span></label>
+                    <div class="hl-password">
+                        <input id="confirmPassword" class="hl-input" type="password" th:field="*{confirmPassword}" autocomplete="new-password" required
+                               th:attr="aria-invalid=${#fields.hasErrors('confirmPassword')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('confirmPassword')} ? 'confirmError'">
+                        <button type="button" class="hl-password-toggle" data-toggle-password="confirmPassword" aria-label="Show password" aria-pressed="false">
+                            <span class="hl-when-hidden"><th:block th:replace="~{fragments/icons :: icon('eye')}"></th:block></span>
+                            <span class="hl-when-shown"><th:block th:replace="~{fragments/icons :: icon('eye-off')}"></th:block></span>
+                        </button>
+                    </div>
+                    <span id="confirmError" class="hl-field-error" th:if="${#fields.hasErrors('confirmPassword')}">
+                        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{confirmPassword}">Error</span>
+                    </span>
+                </div>
+                <div><button class="hl-button" type="submit">Change password</button></div>
+            </form>
+        </section>
+    </div>
+</main>
+</body>
+</html>

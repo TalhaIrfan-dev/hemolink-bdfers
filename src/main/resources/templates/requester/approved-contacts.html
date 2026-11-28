@@ -1,55 +1,65 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>HemoLink | Approved Donor Contacts</title>
-</head>
-
+<!--
+    Donor Contacts (Module 3.4, FR-15, D-16). Only donors who accepted and
+    consented while the request is active are listed; the service enforces it.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Donor Contacts', 'my-requests', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<h1>HemoLink</h1>
-<h2>Approved Donor Contacts</h2>
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/requests}">My Requests</a></li>
+        <li><a th:href="@{/requests/{id}(id=${requestId})}" th:text="${@display.requestId(requestId)}">REQ-0001</a></li>
+        <li aria-current="page">Donor Contacts</li>
+    </ol>
 
-<p>
-    Contact information is displayed only when the donor has accepted,
-    consented to sharing, and the administrator has approved disclosure.
-</p>
+    <div class="hl-page-heading">
+        <div>
+            <h1>Donor Contacts</h1>
+            <p>Donors who accepted <strong th:text="${@display.requestId(requestId)}">REQ-0001</strong> and chose to share their details with you.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button hl-button-secondary" th:href="@{/requests/{id}/matches(id=${requestId})}">
+                <th:block th:replace="~{fragments/icons :: icon('users')}"></th:block>Matching Results
+            </a>
+        </div>
+    </div>
 
-<div th:if="${#lists.isEmpty(approvedContacts)}">
-    <p>
-        No approved donor contact information is available for this request.
-    </p>
-</div>
+    <div class="hl-alert hl-alert-info" role="note">
+        <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>
+        <span>Use these details only to arrange this donation. Contact details are hidden again when the request is closed or completed.</span>
+    </div>
 
-<div th:each="match : ${approvedContacts}"
-     style="border: 1px solid #ddd; padding: 15px; margin: 15px 0;">
+    <section class="hl-card" th:if="${requestInactive}">
+        <th:block th:replace="~{fragments/ui :: empty('lock', 'Contact details are no longer shown', 'This request is no longer active, so shared donor contact details are hidden.')}"></th:block>
+    </section>
 
-    <h3 th:text="${match.donor.user.fullName}"></h3>
+    <section class="hl-card" th:if="${!requestInactive and #lists.isEmpty(contacts)}">
+        <th:block th:replace="~{fragments/ui :: empty('phone', 'No contacts shared yet', 'Names and phone numbers appear here once a donor accepts your request and chooses to share them.')}"></th:block>
+    </section>
 
-    <p>
-        <strong>Blood Group:</strong>
-        <span th:text="${match.donor.bloodGroup}"></span>
-    </p>
-
-    <p>
-        <strong>City:</strong>
-        <span th:text="${match.donor.city}"></span>
-    </p>
-
-    <p>
-        <strong>Contact Number:</strong>
-        <span th:text="${match.donor.user.phone}"></span>
-    </p>
-
-    <p>
-        <strong>Disclosure Approved At:</strong>
-        <span th:text="${match.approvalAt}"></span>
-    </p>
-
-</div>
-
-<a th:href="@{/requests}">Back to My Requests</a>
-
+    <ul class="hl-donor-grid" th:if="${!requestInactive and !#lists.isEmpty(contacts)}" aria-label="Shared donor contacts">
+        <li class="hl-donor-card hl-contact-card" th:each="contact : ${contacts}">
+            <div class="hl-donor-head">
+                <span class="hl-avatar" aria-hidden="true"
+                      th:text="${#strings.isEmpty(contact.fullName) ? '?' : #strings.toUpperCase(#strings.substring(contact.fullName, 0, 1))}">A</span>
+                <div>
+                    <strong th:text="${contact.fullName}">Donor name</strong>
+                    <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${contact.city}">City</span></span>
+                </div>
+                <span class="hl-blood" th:text="${contact.bloodGroupLabel}">A+</span>
+            </div>
+            <a class="hl-button hl-button-block" th:href="${'tel:' + #strings.replace(contact.phone, ' ', '')}"
+               th:attr="aria-label=${'Call ' + contact.fullName + ' on ' + contact.phone}">
+                <th:block th:replace="~{fragments/icons :: icon('phone')}"></th:block>
+                <span th:text="${contact.phone}">0300 0000000</span>
+            </a>
+            <span class="hl-field-hint" th:if="${contact.sharedAt != null}"
+                  th:text="${'Shared: ' + @display.relative(contact.sharedAt)}">Shared: 10 minutes ago</span>
+        </li>
+    </ul>
+</main>
 </body>
 </html>

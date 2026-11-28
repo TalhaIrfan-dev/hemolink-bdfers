@@ -1,48 +1,78 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | HemoLink</title>
-</head>
+<html th:replace="~{layouts/auth :: layout('Create account', ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
+<main id="main" class="hl-auth-main">
+    <section class="hl-card hl-auth-card" aria-labelledby="registerTitle">
 
-<h1>HemoLink</h1>
-<h2>Create Your Account</h2>
+        <div class="hl-auth-mobile-brand">
+            <th:block th:replace="~{fragments/icons :: logo}"></th:block>
+            <span class="hl-brand-name">HemoLink</span>
+        </div>
 
-<p th:if="${error}" th:text="${error}" style="color:red"></p>
+        <h1 id="registerTitle">Create your account</h1>
+        <p class="muted">One account lets you request blood and, if you wish, register as a donor.</p>
 
-<form th:action="@{/register}" th:object="${registerRequest}" method="post">
+        <div class="hl-alert hl-alert-error" th:if="${error}" role="alert">
+            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>
+            <span th:text="${error}">Something went wrong.</span>
+        </div>
 
-    <label>Full Name</label>
-    <input type="text" th:field="*{fullName}" required>
-    <small th:errors="*{fullName}" style="color:red"></small>
+        <!-- FR-01: server-side validation with a message next to each field (NFR-05). -->
+        <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="hl-auth-form" novalidate>
 
-    <br><br>
+            <div class="hl-field">
+                <label for="fullName">Full name <span class="hl-required" aria-hidden="true">*</span></label>
+                <input id="fullName" class="hl-input" type="text" th:field="*{fullName}"
+                       maxlength="100" autocomplete="name" required
+                       th:attr="aria-invalid=${#fields.hasErrors('fullName')} ? 'true',
+                                aria-describedby=${#fields.hasErrors('fullName')} ? 'fullNameError'">
+                <span id="fullNameError" class="hl-field-error" th:if="${#fields.hasErrors('fullName')}">
+                    <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{fullName}">Error</span>
+                </span>
+            </div>
 
-    <label>Email</label>
-    <input type="email" th:field="*{email}" required>
-    <small th:errors="*{email}" style="color:red"></small>
+            <div class="hl-field">
+                <label for="email">Email <span class="hl-required" aria-hidden="true">*</span></label>
+                <input id="email" class="hl-input" type="email" th:field="*{email}"
+                       maxlength="150" autocomplete="email" required
+                       th:attr="aria-invalid=${#fields.hasErrors('email')} ? 'true',
+                                aria-describedby=${#fields.hasErrors('email')} ? 'emailError'">
+                <span id="emailError" class="hl-field-error" th:if="${#fields.hasErrors('email')}">
+                    <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{email}">Error</span>
+                </span>
+            </div>
 
-    <br><br>
+            <div class="hl-field">
+                <label for="phone">Mobile number <span class="hl-required" aria-hidden="true">*</span></label>
+                <input id="phone" class="hl-input" type="tel" th:field="*{phone}"
+                       placeholder="03XXXXXXXXX" autocomplete="tel" required
+                       th:attr="aria-invalid=${#fields.hasErrors('phone')} ? 'true',
+                                aria-describedby=${#fields.hasErrors('phone')} ? 'phoneError' : 'phoneHint'">
+                <span id="phoneHint" class="hl-field-hint">
+                    Format 03XXXXXXXXX or +923XXXXXXXXX. If you become a donor, this number is shared
+                    only when you choose to share it.
+                </span>
+                <span id="phoneError" class="hl-field-error" th:if="${#fields.hasErrors('phone')}">
+                    <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{phone}">Error</span>
+                </span>
+            </div>
 
-    <label>Phone</label>
-    <input type="text" th:field="*{phone}" required>
-    <small th:errors="*{phone}" style="color:red"></small>
+            <div class="hl-field">
+                <label for="password">Password <span class="hl-required" aria-hidden="true">*</span></label>
+                <th:block th:replace="~{fragments/ui :: passwordInput('password', 'password', 'new-password')}"></th:block>
+                <span class="hl-field-hint">At least 8 characters.</span>
+                <span class="hl-field-error" th:if="${#fields.hasErrors('password')}">
+                    <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{password}">Error</span>
+                </span>
+            </div>
 
-    <br><br>
+            <button class="hl-button hl-button-lg hl-button-block" type="submit">Create account</button>
+        </form>
 
-    <label>Password</label>
-    <input type="password" th:field="*{password}" minlength="8" required>
-    <small th:errors="*{password}" style="color:red"></small>
-
-    <br><br>
-
-    <button type="submit">Create Account</button>
-</form>
-
-<p>Already registered? <a th:href="@{/login}">Login</a></p>
-
+        <p class="hl-auth-switch">
+            Already registered? <a th:href="@{/login}">Log in</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>

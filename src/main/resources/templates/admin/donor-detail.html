@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+    Admin: Donor detail (Module 3.6, FR-17, D-04, D-05, SCR-14).
+    Deactivate / reactivate with a required reason; history of changes.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout(${detail.profile.user.fullName}, 'admin-donors', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content" th:with="p=${detail.profile}, u=${detail.profile.user}">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li><a th:href="@{/admin/donors}">Donor Directory</a></li>
+        <li aria-current="page" th:text="${u.fullName}">Name</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div class="hl-person hl-person--lg">
+            <span class="hl-avatar" aria-hidden="true"
+                  th:text="${#strings.isEmpty(u.fullName) ? '?' : #strings.toUpperCase(#strings.substring(u.fullName, 0, 1))}">A</span>
+            <div>
+                <h1 class="hl-title-row">
+                    <span th:text="${u.fullName}">Name</span>
+                    <span class="hl-pill hl-pill--approved" th:if="${p.active}">Active</span>
+                    <span class="hl-pill hl-pill--rejected" th:unless="${p.active}">Deactivated</span>
+                    <span class="hl-pill" th:classappend="${p.availability.name() == 'AVAILABLE'} ? 'hl-pill--fulfilled' : 'hl-pill--closed'"
+                          th:text="${p.availability.label}">Available</span>
+                </h1>
+                <p class="hl-meta-row">
+                    <span class="hl-blood" th:text="${p.bloodGroup.label}">O+</span>
+                    <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${p.city}">City</span></span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
+
+    <div class="hl-dashboard-grid">
+        <section class="hl-card" aria-labelledby="accountTitle">
+            <div class="hl-card-header">
+                <h2 id="accountTitle" class="hl-card-title">Account and profile</h2>
+            </div>
+            <dl class="hl-detail-grid">
+                <div><dt>Email</dt><dd><a th:href="${'mailto:' + u.email}" th:text="${u.email}">email</a></dd></div>
+                <div><dt>Phone</dt><dd><a th:href="${'tel:' + u.phone}" th:text="${u.phone}">phone</a></dd></div>
+                <div><dt>Blood group</dt><dd th:text="${p.bloodGroup.label}">O+</dd></div>
+                <div><dt>City</dt><dd th:text="${p.city}">City</dd></div>
+                <div><dt>Date of birth</dt><dd th:text="${@display.date(p.dateOfBirth) + ' (age ' + @display.age(p.dateOfBirth) + ')'}">date</dd></div>
+                <div><dt>Weight</dt><dd th:text="${p.weight + ' kg'}">70 kg</dd></div>
+                <div><dt>Last donation</dt><dd th:text="${p.lastDonationDate != null ? @display.date(p.lastDonationDate) : 'None recorded'}">-</dd></div>
+                <div><dt>Completed donations</dt><dd th:text="${detail.completedDonations}">0</dd></div>
+            </dl>
+        </section>
+
+        <section class="hl-card hl-advice" th:classappend="${detail.advice.ok} ? 'hl-advice--ok' : 'hl-advice--warn'" aria-labelledby="guidanceTitle">
+            <div class="hl-advice-head">
+                <span class="hl-advice-icon">
+                    <th:block th:if="${detail.advice.ok}"><th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block></th:block>
+                    <th:block th:unless="${detail.advice.ok}"><th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block></th:block>
+                </span>
+                <div>
+                    <span class="hl-kpi-label">Profile guidance</span>
+                    <h2 id="guidanceTitle" th:text="${detail.advice.level.label}">Looks OK</h2>
+                </div>
+            </div>
+            <ul class="hl-advice-reasons" th:unless="${#lists.isEmpty(detail.advice.reasons)}">
+                <li th:each="reason : ${detail.advice.reasons}" th:text="${reason}">reason</li>
+            </ul>
+            <ul class="hl-advice-facts" th:unless="${#lists.isEmpty(detail.advice.facts)}">
+                <li th:each="fact : ${detail.advice.facts}" th:text="${fact}">fact</li>
+            </ul>
+            <p class="hl-field-hint">Advisory only, based on the profile and the current guidance settings. It never blocks the donor.</p>
+        </section>
+    </div>
+
+    <div class="hl-dashboard-grid hl-section-gap">
+        <!-- Deactivate / reactivate (FR-17) -->
+        <section class="hl-card" th:classappend="${p.active} ? 'hl-danger-zone'" aria-labelledby="statusTitle">
+            <div class="hl-card-header">
+                <h2 id="statusTitle" class="hl-card-title" th:text="${p.active ? 'Deactivate donor' : 'Reactivate donor'}">Deactivate donor</h2>
+            </div>
+            <form th:if="${p.active}" th:action="@{/admin/donors/{id}/deactivate(id=${p.id})}" method="post" class="hl-stack"
+                  data-confirm="Deactivate this donor? They will not be matched and cannot respond."
+                  data-confirm-button="Deactivate">
+                <p class="muted">A deactivated donor is excluded from matching and cannot respond to requests. Contact details they already shared are hidden, and their pending matches show "No longer available".</p>
+                <div class="hl-field">
+                    <label for="deactivateReason">Reason <span class="hl-required" aria-hidden="true">*</span></label>
+                    <textarea id="deactivateReason" name="reason" class="hl-textarea" rows="2" maxlength="255" required aria-describedby="deactivateHint"></textarea>
+                    <span id="deactivateHint" class="hl-field-hint">Shown to the donor on their profile.</span>
+                </div>
+                <div><button class="hl-button hl-button-danger" type="submit">Deactivate donor</button></div>
+            </form>
+            <form th:unless="${p.active}" th:action="@{/admin/donors/{id}/reactivate(id=${p.id})}" method="post" class="hl-stack">
+                <p class="muted">Reactivating lets the donor be matched and respond again. Pending matches on active requests become actionable again.</p>
+                <div class="hl-field">
+                    <label for="reactivateReason">Reason <span class="hl-required" aria-hidden="true">*</span></label>
+                    <textarea id="reactivateReason" name="reason" class="hl-textarea" rows="2" maxlength="255" required></textarea>
+                </div>
+                <div><button class="hl-button" type="submit">Reactivate donor</button></div>
+            </form>
+        </section>
+
+        <section class="hl-card" aria-labelledby="changesTitle">
+            <div class="hl-card-header">
+                <h2 id="changesTitle" class="hl-card-title">Deactivation history</h2>
+            </div>
+            <p th:if="${#lists.isEmpty(detail.statusChanges)}" class="muted">No changes recorded.</p>
+            <ol class="hl-timeline" th:unless="${#lists.isEmpty(detail.statusChanges)}">
+                <li class="hl-timeline-item" th:each="c : ${detail.statusChanges}"
+                    th:classappend="${c.action.name() == 'DEACTIVATED'} ? 'is-danger'">
+                    <span class="hl-timeline-icon">
+                        <th:block th:if="${c.action.name() == 'DEACTIVATED'}"><th:block th:replace="~{fragments/icons :: icon('x-circle')}"></th:block></th:block>
+                        <th:block th:unless="${c.action.name() == 'DEACTIVATED'}"><th:block th:replace="~{fragments/icons :: icon('check')}"></th:block></th:block>
+                    </span>
+                    <div>
+                        <div class="hl-timeline-title" th:text="${c.action.label + ' by ' + c.changedBy.fullName}">Deactivated by Admin</div>
+                        <div class="hl-timeline-detail" th:text="${c.reason}">reason</div>
+                        <div class="hl-timeline-time" th:text="${@display.dateTime(c.changedAt)}">date</div>
+                    </div>
+                </li>
+            </ol>
+        </section>
+    </div>
+
+    <section class="hl-card hl-section-gap" aria-labelledby="historyTitle">
+        <div class="hl-card-header">
+            <h2 id="historyTitle" class="hl-card-title" th:text="${'Matched requests (' + #lists.size(detail.history) + ')'}">Matched requests</h2>
+        </div>
+        <th:block th:if="${#lists.isEmpty(detail.history)}">
+            <th:block th:replace="~{fragments/ui :: empty('list', 'Not matched yet', 'This donor has not been matched to any request.')}"></th:block>
+        </th:block>
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(detail.history)}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Request</th>
+                    <th scope="col">Needed / Hospital</th>
+                    <th scope="col">Request status</th>
+                    <th scope="col">Reply</th>
+                    <th scope="col">Contact shared</th>
+                    <th scope="col">Health check</th>
+                    <th scope="col">Donation report</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="h : ${detail.history}">
+                    <td data-label="Request"><div>
+                        <a class="hl-strong-link" th:href="@{/admin/blood-requests/{id}(id=${h.requestId})}"
+                           th:text="${@display.requestId(h.requestId)}">REQ-0001</a>
+                        <span class="hl-table-sub" th:text="${h.urgencyLabel}">Critical</span>
+                    </div></td>
+                    <td data-label="Needed / Hospital"><div>
+                        <span class="hl-blood hl-blood--sm" th:text="${h.requestBloodGroupLabel}">A+</span>
+                        <span class="hl-table-sub" th:text="${h.hospitalName + ', ' + h.city}">Hospital</span>
+                    </div></td>
+                    <td data-label="Request status" th:text="${h.requestStatusLabel}">Pending</td>
+                    <td data-label="Reply" th:text="${h.responseLabel}">Accepted</td>
+                    <td data-label="Contact shared" th:text="${h.consent ? 'Yes, ' + @display.dateTime(h.consentAt) : 'No'}">No</td>
+                    <td data-label="Health check">
+                        <span th:if="${h.healthCheck == null}" class="muted">-</span>
+                        <div class="hl-cell-stack" th:if="${h.healthCheck != null}" th:with="hc=${h.healthCheck}">
+                            <span class="hl-pill" th:classappend="${hc.advice.name() == 'OK'} ? 'hl-pill--fulfilled' : 'hl-pill--pending'"
+                                  th:text="${hc.advice.label}">Looks OK</span>
+                            <span th:text="${'Hb ' + hc.haemoglobinGdl + ' g/dL, CBC ' + @display.date(hc.cbcDate)}">Hb 13 g/dL</span>
+                            <span th:text="${'Weight ' + hc.weightKg + ' kg, ' + hc.unitsOffered + ' unit(s)'}">Weight 60 kg</span>
+                            <span class="hl-table-sub" th:if="${hc.acceptedAgainstAdvice}">Accepted against advice</span>
+                        </div>
+                    </td>
+                    <td data-label="Donation report">
+                        <span th:if="${h.donationRecord == null}" class="muted">-</span>
+                        <div class="hl-cell-stack" th:if="${h.donationRecord != null}" th:with="dr=${h.donationRecord}">
+                            <strong th:text="${dr.outcome.label}">Completed</strong>
+                            <span th:if="${dr.outcome.name() == 'COMPLETED'}"
+                                  th:text="${dr.unitsDonated + ' unit(s) on ' + @display.date(dr.donationDate)}">1 unit</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

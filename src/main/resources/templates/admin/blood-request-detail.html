@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<!--
+    Admin: Blood Request detail (Module 3.6, FR-16/FR-19, D-04, D-15).
+    Administrators see full donor details and raw health-check values;
+    requesters never do (NFR-03).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout(${@display.requestId(detail.request.id)}, 'admin-requests', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content" th:with="r=${detail.request}">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li><a th:href="@{/admin/blood-requests}">Blood Requests</a></li>
+        <li aria-current="page" th:text="${@display.requestId(r.id)}">REQ-0001</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1 class="hl-title-row">
+                <span th:text="${@display.requestId(r.id)}">REQ-0001</span>
+                <th:block th:replace="~{fragments/ui :: urgencyPill(${r.urgency})}"></th:block>
+                <th:block th:replace="~{fragments/ui :: statusPill(${r.adminStatus})}"></th:block>
+                <span class="hl-pill hl-pill--pending" th:if="${detail.criticalNotReviewed}">Not reviewed (optional)</span>
+            </h1>
+            <p>
+                <span class="hl-blood" th:text="${r.bloodGroup.label}">A+</span>
+                <span th:text="${r.hospitalName + ', ' + r.city}">Hospital, City</span>
+            </p>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
+
+    <div class="hl-dashboard-grid">
+
+        <section class="hl-card" aria-labelledby="requestTitle">
+            <div class="hl-card-header">
+                <h2 id="requestTitle" class="hl-card-title">Request</h2>
+            </div>
+            <dl class="hl-detail-grid">
+                <div><dt>Blood group</dt><dd th:text="${r.bloodGroup.label}">A+</dd></div>
+                <div><dt>Units donated</dt><dd th:text="${(r.fulfilledUnits == null ? 0 : r.fulfilledUnits) + ' of ' + r.unitsRequired}">0 of 2</dd></div>
+                <div><dt>City</dt><dd th:text="${r.city}">City</dd></div>
+                <div><dt>Hospital</dt><dd th:text="${r.hospitalName}">Hospital</dd></div>
+                <div><dt>Needed by</dt><dd th:text="${@display.dateTime(r.requiredAt)}">28 Nov 2026, 14:30</dd></div>
+                <div><dt>Submitted</dt><dd th:text="${@display.dateTime(r.createdAt)}">26 Nov 2026, 10:00</dd></div>
+                <div><dt>Matching</dt><dd th:text="${r.matchingStatus.label}">Matches found</dd></div>
+                <div><dt>Matched donors</dt><dd th:text="${#lists.size(detail.matches)}">0</dd></div>
+            </dl>
+        </section>
+
+        <div class="hl-stack">
+            <section class="hl-card" aria-labelledby="requesterTitle">
+                <div class="hl-card-header">
+                    <h2 id="requesterTitle" class="hl-card-title">Requester</h2>
+                </div>
+                <dl class="hl-detail-grid hl-detail-grid--single">
+                    <div><dt>Name</dt><dd th:text="${r.requester.fullName}">Name</dd></div>
+                    <div><dt>Email</dt><dd><a th:href="${'mailto:' + r.requester.email}" th:text="${r.requester.email}">email</a></dd></div>
+                    <div><dt>Phone</dt><dd><a th:href="${'tel:' + r.requester.phone}" th:text="${r.requester.phone}">phone</a></dd></div>
+                </dl>
+            </section>
+
+            <section class="hl-card" th:if="${r.reviewedAt != null or r.closedAt != null}" aria-labelledby="recordTitle">
+                <div class="hl-card-header">
+                    <h2 id="recordTitle" class="hl-card-title">Administrative record</h2>
+                </div>
+                <ol class="hl-timeline">
+                    <li class="hl-timeline-item" th:if="${r.reviewedAt != null}"
+                        th:classappend="${r.rejectionReason != null} ? 'is-danger'">
+                        <span class="hl-timeline-icon"><th:block th:replace="~{fragments/icons :: icon('check')}"></th:block></span>
+                        <div>
+                            <div class="hl-timeline-title"
+                                 th:text="${(r.rejectionReason != null ? 'Rejected' : 'Approved') + ' by ' + (r.reviewedBy != null ? r.reviewedBy.fullName : 'unknown')}">Approved by Admin</div>
+                            <div class="hl-timeline-detail" th:if="${r.rejectionReason != null}" th:text="${'Reason: ' + r.rejectionReason}">Reason</div>
+                            <div class="hl-timeline-time" th:text="${@display.dateTime(r.reviewedAt)}">date</div>
+                        </div>
+                    </li>
+                    <li class="hl-timeline-item" th:if="${r.closedAt != null}">
+                        <span class="hl-timeline-icon"><th:block th:replace="~{fragments/icons :: icon('x-circle')}"></th:block></span>
+                        <div>
+                            <div class="hl-timeline-title" th:text="${'Closed by ' + (r.closedBy != null ? r.closedBy.fullName : 'unknown')}">Closed by User</div>
+                            <div class="hl-timeline-detail" th:if="${r.closeReason != null}" th:text="${'Reason: ' + r.closeReason}">Reason</div>
+                            <div class="hl-timeline-time" th:text="${@display.dateTime(r.closedAt)}">date</div>
+                        </div>
+                    </li>
+                </ol>
+            </section>
+        </div>
+    </div>
+
+    <!-- Actions: review (approve / reject) and close; checked again on the server (FR-19) -->
+    <section class="hl-card hl-section-gap" th:if="${detail.reviewable or detail.closable}" aria-labelledby="actionsTitle">
+        <div class="hl-card-header">
+            <h2 id="actionsTitle" class="hl-card-title">Actions</h2>
+        </div>
+        <div class="hl-action-cards">
+            <form class="hl-action-card" th:if="${detail.reviewable}"
+                  th:action="@{/admin/blood-requests/{id}/review(id=${r.id})}" method="post">
+                <input type="hidden" name="decision" value="APPROVED">
+                <strong>Approve</strong>
+                <p class="muted" th:if="${r.urgency.name() == 'NORMAL'}">Approving starts donor matching.</p>
+                <p class="muted" th:if="${r.urgency.name() == 'CRITICAL'}">This request is already being matched. Approval is optional.</p>
+                <button class="hl-button" type="submit">
+                    <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>Approve
+                </button>
+            </form>
+            <form class="hl-action-card" th:if="${detail.reviewable}"
+                  th:action="@{/admin/blood-requests/{id}/review(id=${r.id})}" method="post"
+                  data-confirm="Reject this request? Donors will no longer be able to accept it."
+                  data-confirm-button="Reject request">
+                <input type="hidden" name="decision" value="REJECTED">
+                <div class="hl-field">
+                    <label for="rejectionReason">Reject: reason <span class="hl-required" aria-hidden="true">*</span></label>
+                    <textarea id="rejectionReason" name="rejectionReason" class="hl-textarea" rows="2" maxlength="255" required
+                              aria-describedby="rejectHint"></textarea>
+                    <span id="rejectHint" class="hl-field-hint">Shown to the requester. Donors can no longer accept, and shared contacts are hidden.</span>
+                </div>
+                <button class="hl-button hl-button-danger" type="submit">Reject</button>
+            </form>
+            <form class="hl-action-card" th:if="${detail.closable}"
+                  th:action="@{/admin/blood-requests/{id}/close(id=${r.id})}" method="post"
+                  data-confirm="Close this request? It ends the request and hides shared donor contacts."
+                  data-confirm-button="Close request">
+                <div class="hl-field">
+                    <label for="closeReason">Close: reason <span class="hl-required" aria-hidden="true">*</span></label>
+                    <textarea id="closeReason" name="reason" class="hl-textarea" rows="2" maxlength="255" required
+                              aria-describedby="closeHint"></textarea>
+                    <span id="closeHint" class="hl-field-hint">Closing ends the request. Shared donor contacts are hidden.</span>
+                </div>
+                <button class="hl-button hl-button-secondary" type="submit">Close request</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Matched donors: admin only (D-04, D-05) -->
+    <section class="hl-card hl-section-gap" aria-labelledby="matchesTitle">
+        <div class="hl-card-header">
+            <h2 id="matchesTitle" class="hl-card-title" th:text="${'Matched donors (' + #lists.size(detail.matches) + ')'}">Matched donors</h2>
+        </div>
+        <p class="hl-field-hint hl-privacy-note">
+            <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>
+            Administrator view. Contact details and health-check values are never shown to requesters. Health values are what the donor entered: guidance, not a medical assessment.
+        </p>
+
+        <th:block th:if="${#lists.isEmpty(detail.matches)}">
+            <th:block th:replace="~{fragments/ui :: empty('users', 'No donors matched yet', 'Matching runs when a Critical request is created or a Normal request is approved.')}"></th:block>
+        </th:block>
+
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(detail.matches)}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Donor</th>
+                    <th scope="col">Contact</th>
+                    <th scope="col">Group / City</th>
+                    <th scope="col">Reply</th>
+                    <th scope="col">Contact shared</th>
+                    <th scope="col">Health check</th>
+                    <th scope="col">Donation report</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${detail.matches}">
+                    <td data-label="Donor"><div>
+                        <a class="hl-strong-link" th:href="@{/admin/donors/{id}(id=${m.donorProfileId})}" th:text="${m.donorName}">Name</a>
+                        <span class="hl-pill hl-pill--closed" th:unless="${m.donorActive}">Deactivated</span>
+                    </div></td>
+                    <td data-label="Contact"><div>
+                        <span th:text="${m.donorPhone}">phone</span>
+                        <span class="hl-table-sub" th:text="${m.donorEmail}">email</span>
+                    </div></td>
+                    <td data-label="Group / City"><div>
+                        <span class="hl-blood hl-blood--sm" th:text="${m.bloodGroupLabel}">O+</span>
+                        <span class="hl-table-sub" th:text="${m.city}">City</span>
+                    </div></td>
+                    <td data-label="Reply" th:text="${m.responseLabel}">Accepted</td>
+                    <td data-label="Contact shared" th:text="${m.consent ? 'Yes, ' + @display.dateTime(m.consentAt) : 'No'}">No</td>
+                    <td data-label="Health check">
+                        <span th:if="${m.healthCheck == null}" class="muted">-</span>
+                        <div class="hl-cell-stack" th:if="${m.healthCheck != null}" th:with="hc=${m.healthCheck}">
+                            <span class="hl-pill" th:classappend="${hc.advice.name() == 'OK'} ? 'hl-pill--fulfilled' : 'hl-pill--pending'"
+                                  th:text="${hc.advice.label}">Looks OK</span>
+                            <span th:text="${'Hb ' + hc.haemoglobinGdl + ' g/dL (CBC ' + @display.date(hc.cbcDate) + ')'}">Hb 13 g/dL</span>
+                            <span th:text="${'Weight ' + hc.weightKg + ' kg, ' + hc.unitsOffered + ' unit(s)'}">Weight 60 kg</span>
+                            <span class="hl-table-sub" th:if="${hc.acceptedAgainstAdvice}">Accepted against advice</span>
+                            <span class="hl-table-sub" th:if="${hc.adviceReasons != null}" th:text="${hc.adviceReasons}">reasons</span>
+                        </div>
+                    </td>
+                    <td data-label="Donation report">
+                        <span th:if="${m.donationRecord == null}" class="muted">-</span>
+                        <div class="hl-cell-stack" th:if="${m.donationRecord != null}" th:with="dr=${m.donationRecord}">
+                            <strong th:text="${dr.outcome.label}">Completed</strong>
+                            <span th:if="${dr.outcome.name() == 'COMPLETED'}"
+                                  th:text="${dr.unitsDonated + ' unit(s) on ' + @display.date(dr.donationDate)}">1 unit</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

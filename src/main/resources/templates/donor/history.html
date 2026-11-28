@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- Donation History (Module 3.5, FR-18). The donor's own reports only. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Donation History', 'donor-history', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li aria-current="page">Donation History</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1>Donation History</h1>
+            <p>Donations you reported through HemoLink.</p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button hl-button-secondary" th:href="@{/donor/requests}">Matched Requests</a>
+        </div>
+    </div>
+
+    <section class="hl-kpi-grid" aria-label="Donation summary">
+        <article class="hl-card hl-kpi hl-kpi--primary">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('drop')}"></th:block></span>
+            <span class="hl-kpi-label">Completed donations</span>
+            <span class="hl-kpi-value" th:text="${history.completedDonations}">0</span>
+            <span class="hl-kpi-trend">Reported through HemoLink</span>
+        </article>
+        <article class="hl-card hl-kpi">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('heart')}"></th:block></span>
+            <span class="hl-kpi-label">Units donated</span>
+            <span class="hl-kpi-value" th:text="${history.totalUnits}">0</span>
+            <span class="hl-kpi-trend">One unit is one donation</span>
+        </article>
+        <article class="hl-card hl-kpi">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('calendar')}"></th:block></span>
+            <span class="hl-kpi-label">Last donation</span>
+            <span class="hl-kpi-value hl-kpi-value--text"
+                  th:text="${history.lastDonationDate != null ? @display.date(history.lastDonationDate) : 'None yet'}">None yet</span>
+            <span class="hl-kpi-trend">Includes donations outside HemoLink</span>
+        </article>
+        <article class="hl-card hl-kpi hl-kpi--info">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('clock')}"></th:block></span>
+            <span class="hl-kpi-label">Next suggested date</span>
+            <span class="hl-kpi-value hl-kpi-value--text"
+                  th:text="${history.nextSuggestedDate != null ? @display.date(history.nextSuggestedDate) : 'Any time'}">Any time</span>
+            <span class="hl-kpi-trend" th:if="${history.nextSuggestedDate != null}"
+                  th:text="${'Last donation + ' + history.intervalDays + ' days (guidance only)'}">Guidance only</span>
+            <span class="hl-kpi-trend" th:unless="${history.nextSuggestedDate != null}">Guidance only</span>
+        </article>
+    </section>
+
+    <section class="hl-card" aria-labelledby="historyTitle">
+        <div class="hl-card-header">
+            <h2 id="historyTitle" class="hl-card-title">Reported outcomes</h2>
+        </div>
+
+        <th:block th:if="${#lists.isEmpty(history.rows)}">
+            <th:block th:replace="~{fragments/ui :: empty('history', 'No donations reported yet', 'After you accept a request and the donation takes place, report it from Matched Requests.')}"></th:block>
+        </th:block>
+
+        <div class="hl-table-wrap" th:unless="${#lists.isEmpty(history.rows)}">
+            <table class="hl-table hl-table--stack">
+                <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Request</th>
+                    <th scope="col">Hospital</th>
+                    <th scope="col">Units</th>
+                    <th scope="col">Outcome</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${history.rows}">
+                    <td data-label="Date" th:text="${row.donationDate != null ? @display.date(row.donationDate) : @display.dateTime(row.reportedAt)}">20 Nov 2026</td>
+                    <td data-label="Request"><div>
+                        <strong th:text="${@display.requestId(row.requestId)}">REQ-0001</strong>
+                        <span class="hl-blood hl-blood--sm" th:text="${row.bloodGroupLabel}">A+</span>
+                    </div></td>
+                    <td data-label="Hospital"><div>
+                        <span th:text="${row.hospitalName}">Hospital</span>
+                        <span class="hl-table-sub" th:text="${row.city}">City</span>
+                    </div></td>
+                    <td data-label="Units" th:text="${row.completed ? row.unitsDonated : '-'}">1</td>
+                    <td data-label="Outcome">
+                        <span class="hl-pill" th:classappend="${row.completed} ? 'hl-pill--fulfilled' : 'hl-pill--closed'"
+                              th:text="${row.outcomeLabel}">Completed</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="hl-field-hint hl-privacy-note" th:if="${history.nextSuggestedDate != null}">
+            <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+            The next suggested date is guidance only. You decide when to donate, and the hospital or blood bank makes the final assessment.
+        </p>
+    </section>
+</main>
+</body>
+</html>

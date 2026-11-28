@@ -1,122 +1,140 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potential Donors | HemoLink</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            padding: 30px;
-            color: #222;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: auto;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            background: #b42332;
-            color: white;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .message {
-            background: #e6f4ea;
-            padding: 12px;
-            border-radius: 5px;
-        }
-
-        .empty {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-        }
-    </style>
-</head>
+<!--
+    Matching Results (Module 3.4, FR-11/FR-12). Masked donors only:
+    MatchSummary has no name, phone, email, date of birth or internal id (NFR-03).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Matching Results', 'my-requests', ~{::main})}">
 <body>
+<main id="main" class="hl-page-content">
 
-<div class="container">
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/requests}">My Requests</a></li>
+        <li><a th:href="@{/requests/{id}(id=${view.requestId})}" th:text="${@display.requestId(view.requestId)}">REQ-0001</a></li>
+        <li aria-current="page">Matching Results</li>
+    </ol>
 
-    <h2>Potential Donors</h2>
-
-    <p>
-        Request ID:
-        <strong th:text="${requestId}"></strong>
-    </p>
-
-    <div class="message" th:if="${param.refreshed}">
-        Matching results refreshed successfully.
+    <div class="hl-page-heading">
+        <div>
+            <h1>Potential Donors</h1>
+            <p class="hl-meta-row">
+                <strong th:text="${@display.requestId(view.requestId)}">REQ-0001</strong>
+                <span class="hl-blood" th:text="${view.bloodGroupLabel}">A+</span>
+                <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${view.city}">City</span></span>
+                <span class="hl-pill" th:classappend="${view.critical} ? 'hl-pill--critical' : 'hl-pill--normal'" th:text="${view.urgencyLabel}">Critical</span>
+                <span class="hl-pill" th:classappend="${@display.stageClass(view.stage)}" th:text="${@display.stageLabel(view.stage)}">Matching</span>
+            </p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <form th:if="${view.refreshAllowed}" method="post"
+                  th:action="@{/requests/{id}/matches/refresh(id=${view.requestId})}">
+                <button class="hl-button hl-button-secondary" type="submit">
+                    <th:block th:replace="~{fragments/icons :: icon('activity')}"></th:block>Refresh matches
+                </button>
+            </form>
+            <a class="hl-button" th:if="${view.contactsSharedCount > 0}"
+               th:href="@{/requests/{id}/matches/contacts(id=${view.requestId})}">
+                <th:block th:replace="~{fragments/icons :: icon('phone')}"></th:block>Donor Contacts
+            </a>
+        </div>
     </div>
 
-    <form th:action="@{/requests/{id}/matches/refresh(id=${requestId})}"
-          method="post">
-        <button class="button" type="submit">Refresh Matches</button>
-    </form>
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
 
-    <div th:if="${#lists.isEmpty(matches)}" class="empty">
-        <h3>No potential donors found</h3>
-        <p>
-            No eligible, available donors currently match this request's
-            blood group and city.
-        </p>
+    <div class="hl-alert hl-alert-info" role="status" th:unless="${view.refreshAllowed}">
+        <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+        <span th:text="${view.refreshBlockedReason}">Matching cannot be refreshed right now.</span>
     </div>
 
-    <div th:each="match, status : ${matches}" class="card">
+    <!-- FR-12: number of potential donors and how they replied -->
+    <section class="hl-kpi-grid" aria-label="Matching summary">
+        <article class="hl-card hl-kpi hl-kpi--primary">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('users')}"></th:block></span>
+            <span class="hl-kpi-label">Potential donors</span>
+            <span class="hl-kpi-value" th:text="${view.totalMatches}">0</span>
+            <span class="hl-kpi-trend" th:text="${view.fulfilledUnits + ' of ' + view.unitsRequired + ' units donated'}">0 of 2 units donated</span>
+        </article>
+        <article class="hl-card hl-kpi hl-kpi--warning">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('hourglass')}"></th:block></span>
+            <span class="hl-kpi-label">Awaiting response</span>
+            <span class="hl-kpi-value" th:text="${view.awaitingCount}">0</span>
+            <span class="hl-kpi-trend">Donors who have not replied</span>
+        </article>
+        <article class="hl-card hl-kpi">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block></span>
+            <span class="hl-kpi-label">Accepted</span>
+            <span class="hl-kpi-value" th:text="${view.acceptedCount}">0</span>
+            <span class="hl-kpi-trend" th:text="${view.declinedCount + ' declined'}">0 declined</span>
+        </article>
+        <article class="hl-card hl-kpi hl-kpi--info">
+            <span class="hl-kpi-icon"><th:block th:replace="~{fragments/icons :: icon('phone')}"></th:block></span>
+            <span class="hl-kpi-label">Contacts shared</span>
+            <span class="hl-kpi-value" th:text="${view.contactsSharedCount}">0</span>
+            <span class="hl-kpi-trend" th:if="${view.unavailableCount > 0}" th:text="${view.unavailableCount + ' no longer available'}">1 no longer available</span>
+            <span class="hl-kpi-trend" th:unless="${view.unavailableCount > 0}">Shared by donors' choice</span>
+        </article>
+    </section>
 
-        <h3>
-            Potential Donor #
-            <span th:text="${status.count}"></span>
-        </h3>
+    <section class="hl-card" aria-labelledby="donorsTitle">
+        <div class="hl-card-header">
+            <h2 id="donorsTitle" class="hl-card-title">Matched donors</h2>
+            <!-- FR-12: filter by donor response -->
+            <nav class="hl-tabs hl-tabs--scroll" aria-label="Filter by donor response" th:if="${view.totalMatches > 0}">
+                <a class="hl-tab" th:href="@{/requests/{id}/matches(id=${view.requestId})}"
+                   th:classappend="${view.filter == null} ? 'active'"
+                   th:attr="aria-current=${view.filter == null} ? 'page'">
+                    All <span class="hl-tab-count" th:text="${view.totalMatches}">0</span>
+                </a>
+                <a class="hl-tab" th:each="option : ${responseFilters}"
+                   th:href="@{/requests/{id}/matches(id=${view.requestId}, response=${option.name()})}"
+                   th:classappend="${view.filter == option} ? 'active'"
+                   th:attr="aria-current=${view.filter == option} ? 'page'">
+                    <span th:text="${option.name() == 'PENDING' ? 'Awaiting' : option.label}">Accepted</span>
+                    <span class="hl-tab-count"
+                          th:text="${option.name() == 'PENDING' ? view.awaitingCount : (option.name() == 'ACCEPTED' ? view.acceptedCount : view.declinedCount)}">0</span>
+                </a>
+            </nav>
+        </div>
 
-        <p>
-            <strong>Blood Group:</strong>
-            <span th:text="${#strings.replace(match.donor.bloodGroup.name(), '_', ' ')}"></span>
+        <th:block th:if="${view.totalMatches == 0}">
+            <th:block th:replace="~{fragments/ui :: empty('search', 'No potential donors yet', 'No available donors with a compatible blood group are registered in this city right now. Refresh later to check for newly available donors.')}"></th:block>
+        </th:block>
+
+        <th:block th:if="${view.totalMatches > 0 and #lists.isEmpty(view.matches)}">
+            <th:block th:replace="~{fragments/ui :: empty('filter', 'No donors with this reply', 'Choose All to see every matched donor.')}"></th:block>
+        </th:block>
+
+        <ul class="hl-donor-grid" th:unless="${#lists.isEmpty(view.matches)}">
+            <li class="hl-donor-card" th:each="match : ${view.matches}"
+                th:classappend="${match.donorUnavailable} ? 'is-muted'">
+                <div class="hl-donor-head">
+                    <span class="hl-donor-avatar" aria-hidden="true" th:text="${match.number}">1</span>
+                    <div>
+                        <strong th:text="${'Potential donor ' + match.number}">Potential donor 1</strong>
+                        <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${match.city}">City</span></span>
+                    </div>
+                    <span class="hl-blood" th:text="${match.bloodGroupLabel}">A+</span>
+                </div>
+                <div class="hl-donor-foot">
+                    <span class="hl-pill"
+                          th:classappend="${match.donorUnavailable} ? 'hl-pill--unavailable' : ${'hl-pill--' + #strings.toLowerCase(match.response.name())}"
+                          th:text="${match.responseLabel}">Awaiting response</span>
+                    <span class="hl-donor-contact is-shared" th:if="${match.contactShared}">
+                        <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>Contact shared
+                    </span>
+                    <span class="hl-donor-contact" th:if="${!match.contactShared and !match.donorUnavailable}">
+                        <th:block th:replace="~{fragments/icons :: icon('lock')}"></th:block>Contact private
+                    </span>
+                </div>
+            </li>
+        </ul>
+
+        <p class="hl-field-hint hl-privacy-note" th:if="${view.totalMatches > 0}">
+            <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>
+            Donor names and phone numbers stay private until a donor accepts and chooses to share them.
         </p>
-
-        <p>
-            <strong>City:</strong>
-            <span th:text="${match.donor.city}"></span>
-        </p>
-
-        <p>
-            <strong>Availability:</strong>
-            <span th:text="${match.donor.availability}"></span>
-        </p>
-
-        <p>
-            <strong>Donor Response:</strong>
-            <span th:text="${match.donorResponse}"></span>
-        </p>
-
-        <p>
-            <strong>Admin Approval:</strong>
-            <span th:text="${match.adminApproval}"></span>
-        </p>
-
-        <p>Contact information is protected.</p>
-
-    </div>
-
-    <p><a th:href="@{/requests}">Back to My Requests</a></p>
-
-</div>
-
+    </section>
+</main>
 </body>
 </html>

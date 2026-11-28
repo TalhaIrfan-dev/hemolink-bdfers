@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+    Accept a request with the advisory health check (Module 3.5, D-01, SCR-03).
+    Step 1: enter values. Step 2: advice + the donor's own decision.
+    "Accept anyway" needs the acknowledgement box (also checked on the server).
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout('Accept Blood Request', 'donor-requests', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/donor/requests}">Matched Requests</a></li>
+        <li aria-current="page">Accept</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1>Accept Blood Request</h1>
+            <p class="hl-meta-row">
+                <strong th:text="${@display.requestId(context.requestId)}">REQ-0001</strong>
+                <span class="hl-blood" th:text="${context.bloodGroupLabel}">A+</span>
+                <span class="hl-meta"><th:block th:replace="~{fragments/icons :: icon('map-pin')}"></th:block><span th:text="${context.hospitalName + ', ' + context.city}">Hospital, City</span></span>
+                <span class="hl-pill" th:classappend="${context.urgencyLabel == 'Critical'} ? 'hl-pill--critical' : 'hl-pill--normal'" th:text="${context.urgencyLabel}">Critical</span>
+            </p>
+        </div>
+    </div>
+
+    <ol class="hl-stepper" aria-label="Progress">
+        <li th:classappend="${advice == null} ? 'is-current' : 'is-done'" th:attr="aria-current=${advice == null} ? 'step'">
+            <span>1</span>Health check
+        </li>
+        <li th:classappend="${advice != null} ? 'is-current'" th:attr="aria-current=${advice != null} ? 'step'">
+            <span>2</span>Your decision
+        </li>
+    </ol>
+
+    <div class="hl-alert hl-alert-error" role="alert" th:if="${errorMessage}">
+        <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>
+        <span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <div class="hl-form-layout">
+        <div class="hl-stack">
+
+            <!-- ============ STEP 1: ENTER VALUES ============ -->
+            <section class="hl-card" th:if="${advice == null}" aria-labelledby="checkTitle">
+                <div class="hl-card-header">
+                    <h2 id="checkTitle" class="hl-card-title">Your health check</h2>
+                </div>
+                <form th:action="@{/donor/requests/{id}/accept/check(id=${context.matchId})}"
+                      th:object="${healthCheck}" method="post" class="hl-form-grid" novalidate>
+
+                    <div class="hl-field">
+                        <label for="haemoglobinGdl">Haemoglobin (g/dL) <span class="hl-required" aria-hidden="true">*</span></label>
+                        <input id="haemoglobinGdl" class="hl-input" type="number" step="0.1" min="3" max="25" inputmode="decimal"
+                               th:field="*{haemoglobinGdl}" placeholder="For example 13.2" required
+                               th:attr="aria-invalid=${#fields.hasErrors('haemoglobinGdl')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('haemoglobinGdl')} ? 'hbError' : 'hbHint'">
+                        <span id="hbHint" class="hl-field-hint">From your most recent CBC (complete blood count) report.</span>
+                        <span id="hbError" class="hl-field-error" th:if="${#fields.hasErrors('haemoglobinGdl')}">
+                            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{haemoglobinGdl}">Error</span>
+                        </span>
+                    </div>
+
+                    <div class="hl-field">
+                        <label for="cbcDate">Date of CBC test <span class="hl-required" aria-hidden="true">*</span></label>
+                        <input id="cbcDate" class="hl-input" type="date" th:field="*{cbcDate}" required
+                               th:attr="aria-invalid=${#fields.hasErrors('cbcDate')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('cbcDate')} ? 'cbcError'">
+                        <span id="cbcError" class="hl-field-error" th:if="${#fields.hasErrors('cbcDate')}">
+                            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{cbcDate}">Error</span>
+                        </span>
+                    </div>
+
+                    <div class="hl-field">
+                        <label for="weightKg">Current weight (kg) <span class="hl-required" aria-hidden="true">*</span></label>
+                        <input id="weightKg" class="hl-input" type="number" step="0.1" min="30" max="250" inputmode="decimal"
+                               th:field="*{weightKg}" required
+                               th:attr="aria-invalid=${#fields.hasErrors('weightKg')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('weightKg')} ? 'weightError'">
+                        <span id="weightError" class="hl-field-error" th:if="${#fields.hasErrors('weightKg')}">
+                            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{weightKg}">Error</span>
+                        </span>
+                    </div>
+
+                    <div class="hl-field">
+                        <label for="unitsOffered">Units you are offering <span class="hl-required" aria-hidden="true">*</span></label>
+                        <input id="unitsOffered" class="hl-input" type="number" step="1" min="1" inputmode="numeric"
+                               th:field="*{unitsOffered}" required
+                               th:attr="max=${context.remainingUnits},
+                                        aria-invalid=${#fields.hasErrors('unitsOffered')} ? 'true',
+                                        aria-describedby=${#fields.hasErrors('unitsOffered')} ? 'unitsError' : 'unitsHint'">
+                        <span id="unitsHint" class="hl-field-hint" th:text="${'One whole-blood donation is one unit. Still needed: ' + context.remainingUnits + '.'}">One donation is one unit.</span>
+                        <span id="unitsError" class="hl-field-error" th:if="${#fields.hasErrors('unitsOffered')}">
+                            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block><span th:errors="*{unitsOffered}">Error</span>
+                        </span>
+                    </div>
+
+                    <div class="hl-form-span-2 hl-action-row">
+                        <button class="hl-button hl-button-lg" type="submit">Check and continue</button>
+                        <a class="hl-button hl-button-secondary hl-button-lg" th:href="@{/donor/requests}">Cancel</a>
+                    </div>
+                </form>
+            </section>
+
+            <!-- ============ STEP 2: ADVICE ============ -->
+            <section class="hl-card hl-advice" th:if="${advice != null}"
+                     th:classappend="${advice.ok} ? 'hl-advice--ok' : 'hl-advice--warn'"
+                     aria-labelledby="adviceTitle">
+                <div class="hl-advice-head">
+                    <span class="hl-advice-icon">
+                        <th:block th:if="${advice.ok}"><th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block></th:block>
+                        <th:block th:unless="${advice.ok}"><th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block></th:block>
+                    </span>
+                    <div>
+                        <h2 id="adviceTitle" th:text="${advice.level.label}">Looks OK</h2>
+                        <p th:if="${advice.ok}">Your answers are within the guidance values.</p>
+                        <p th:unless="${advice.ok}">Based on the guidance values, donating now is <strong>not advised</strong>.</p>
+                    </div>
+                </div>
+                <ul class="hl-advice-reasons" th:unless="${#lists.isEmpty(advice.reasons)}">
+                    <li th:each="reason : ${advice.reasons}" th:text="${reason}">Reason</li>
+                </ul>
+                <ul class="hl-advice-facts" th:unless="${#lists.isEmpty(advice.facts)}">
+                    <li th:each="fact : ${advice.facts}" th:text="${fact}">Fact</li>
+                </ul>
+                <dl class="hl-detail-grid hl-entered">
+                    <div><dt>Haemoglobin</dt><dd th:text="${healthCheck.haemoglobinGdl + ' g/dL'}">13 g/dL</dd></div>
+                    <div><dt>CBC date</dt><dd th:text="${@display.date(healthCheck.cbcDate)}">20 Nov 2026</dd></div>
+                    <div><dt>Weight</dt><dd th:text="${healthCheck.weightKg + ' kg'}">60 kg</dd></div>
+                    <div><dt>Units offered</dt><dd th:text="${healthCheck.unitsOffered}">1</dd></div>
+                </dl>
+            </section>
+
+            <!-- ============ STEP 2: DECISION ============ -->
+            <section class="hl-card" th:if="${advice != null}" aria-labelledby="decisionTitle">
+                <div class="hl-card-header">
+                    <h2 id="decisionTitle" class="hl-card-title">Your decision</h2>
+                </div>
+                <form th:action="@{/donor/requests/{id}/accept/confirm(id=${context.matchId})}"
+                      th:object="${healthCheck}" method="post" class="hl-stack">
+                    <input type="hidden" th:field="*{haemoglobinGdl}">
+                    <input type="hidden" th:field="*{cbcDate}">
+                    <input type="hidden" th:field="*{weightKg}">
+                    <input type="hidden" th:field="*{unitsOffered}">
+
+                    <label class="hl-checkbox hl-ack" th:unless="${advice.ok}">
+                        <input type="checkbox" name="acknowledged" value="true" required>
+                        <span>I understand this is guidance, not medical advice, and I still choose to accept this request.</span>
+                    </label>
+
+                    <div class="hl-action-row">
+                        <button class="hl-button hl-button-lg" type="submit" th:if="${advice.ok}">
+                            <th:block th:replace="~{fragments/icons :: icon('check')}"></th:block>Accept request
+                        </button>
+                        <button class="hl-button hl-button-warning hl-button-lg" type="submit" th:unless="${advice.ok}">
+                            Accept anyway
+                        </button>
+                        <a class="hl-button hl-button-secondary hl-button-lg"
+                           th:href="@{/donor/requests/{id}/accept(id=${context.matchId})}">Change my answers</a>
+                    </div>
+                </form>
+                <form class="hl-decline-form" th:action="@{/donor/requests/{id}/respond(id=${context.matchId})}" method="post"
+                      data-confirm="Decline this blood request? You cannot accept it later."
+                      data-confirm-button="Decline">
+                    <input type="hidden" name="response" value="DECLINED">
+                    <button class="hl-text-button" type="submit">Decline this request instead</button>
+                </form>
+            </section>
+        </div>
+
+        <aside class="hl-stack" aria-label="About this check">
+            <section class="hl-card">
+                <h2 class="hl-card-title">
+                    <th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block>Guidance only
+                </h2>
+                <ul class="hl-steps hl-steps--plain">
+                    <li>This check is <strong>not a medical assessment</strong> and never stops you from accepting.</li>
+                    <li>The hospital or blood bank does its own screening before any donation.</li>
+                    <li>Your health answers are <strong>never shown to the requester</strong>.</li>
+                </ul>
+            </section>
+            <section class="hl-card">
+                <h2 class="hl-card-title">Still needed</h2>
+                <p class="hl-big-number"><span th:text="${context.remainingUnits}">1</span> <small>units</small></p>
+            </section>
+        </aside>
+    </div>
+</main>
+</body>
+</html>

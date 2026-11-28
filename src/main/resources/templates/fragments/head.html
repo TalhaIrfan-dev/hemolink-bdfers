@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!--
+    Shared <head> for every page (Module 3.1).
+    Usage: <head th:replace="~{fragments/head :: head('Page title')}"></head>
+-->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <title th:text="${title + ' | HemoLink'}">HemoLink</title>
+    <link rel="icon" th:href="@{/images/favicon.svg}" type="image/svg+xml">
+    <!-- Inter loads when online; the system font is used otherwise. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+    <link rel="stylesheet" th:href="@{/css/variables.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <script th:src="@{/js/main.js}" defer></script>
+</head>
+<body>
+<!--
+    Chart scripts: include inside <main> on pages with charts.
+    <th:block th:replace="~{fragments/head :: chartScripts}"></th:block>
+    Chart.js is a saved copy (decision D-07); charts.js shows a message if it is missing.
+-->
+<th:block th:fragment="chartScripts">
+    <script th:src="@{/js/vendor/chart.umd.min.js}" defer></script>
+    <script th:src="@{/js/charts.js}" defer></script>
+</th:block>
+</body>
+</html>

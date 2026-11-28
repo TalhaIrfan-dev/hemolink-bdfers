@@ -1,44 +1,51 @@
-
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | HemoLink</title>
-</head>
+<html th:replace="~{layouts/auth :: layout('Login', ~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
+<main id="main" class="hl-auth-main">
+    <section class="hl-card hl-auth-card" aria-labelledby="loginTitle">
 
-<h1>HemoLink</h1>
-<h2>Login to Your Account</h2>
+        <div class="hl-auth-mobile-brand">
+            <th:block th:replace="~{fragments/icons :: logo}"></th:block>
+            <span class="hl-brand-name">HemoLink</span>
+        </div>
 
-<p th:if="${param.registered}" style="color:green">
-    Registration successful! You can now log in.
-</p>
+        <h1 id="loginTitle">Welcome back</h1>
+        <p class="muted">Log in to request blood, respond to matches, or manage the system.</p>
 
-<p th:if="${param.error}" style="color:red">
-    Invalid email or password.
-</p>
+        <!-- FR-02: one generic message that does not reveal which credential was wrong. -->
+        <div class="hl-alert hl-alert-error" th:if="${param.error}" role="alert">
+            <th:block th:replace="~{fragments/icons :: icon('alert')}"></th:block>
+            <span>Invalid email or password.</span>
+        </div>
+        <div class="hl-alert hl-alert-success" th:if="${param.registered}" role="status">
+            <th:block th:replace="~{fragments/icons :: icon('check-circle')}"></th:block>
+            <span>Your account has been created. You can now log in.</span>
+        </div>
+        <div class="hl-alert hl-alert-info" th:if="${param.logout}" role="status">
+            <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+            <span>You have logged out.</span>
+        </div>
 
-<p th:if="${param.logout}" style="color:green">
-    You have logged out successfully.
-</p>
+        <form th:action="@{/login}" method="post" class="hl-auth-form">
+            <div class="hl-field">
+                <label for="email">Email</label>
+                <input id="email" class="hl-input" type="email" name="email"
+                       autocomplete="username" required autofocus
+                        aria-invalid="false">
+            </div>
 
-<form th:action="@{/login}" method="post">
+            <div class="hl-field">
+                <label for="password">Password</label>
+                <th:block th:replace="~{fragments/ui :: passwordInput('password', 'password', 'current-password')}"></th:block>
+            </div>
 
-    <label>Email</label>
-    <input type="email" name="email" required>
+            <button class="hl-button hl-button-lg hl-button-block" type="submit">Log in</button>
+        </form>
 
-    <br><br>
-
-    <label>Password</label>
-    <input type="password" name="password" required>
-
-    <br><br>
-
-    <button type="submit">Login</button>
-</form>
-
-<p>Don't have an account? <a th:href="@{/register}">Register</a></p>
-
+        <p class="hl-auth-switch">
+            New to HemoLink? <a th:href="@{/register}">Create an account</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>

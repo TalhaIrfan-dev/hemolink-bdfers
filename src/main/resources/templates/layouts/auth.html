@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+    Layout for login and registration (Module 3.1): a centred card with the
+    HemoLink brand.
+
+    Usage:
+      <html th:replace="~{layouts/auth :: layout('Login', ~{::main})}">
+      <body><main> ...form... </main></body></html>
+-->
+<html lang="en" th:fragment="layout(title, content)" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${title})}"></head>
+<body class="hl-auth">
+<div class="hl-auth-shell">
+    <section class="hl-auth-brand" aria-hidden="true">
+        <div class="hl-auth-brand-inner">
+            <div class="hl-brand hl-brand-large">
+                <th:block th:replace="~{fragments/icons :: logo}"></th:block>
+                <span>
+                    <span class="hl-brand-name">HemoLink</span>
+                    <span class="hl-brand-sub">Blood Donor Finder &amp; Emergency Request System</span>
+                </span>
+            </div>
+            <p class="hl-auth-tagline">Request blood, find compatible donors nearby, and keep donor contact details private until donors choose to share them.</p>
+            <ul class="hl-auth-points">
+                <li><th:block th:replace="~{fragments/icons :: icon('bolt')}"></th:block> Critical requests are matched immediately</li>
+                <li><th:block th:replace="~{fragments/icons :: icon('shield')}"></th:block> Donors control who sees their contact details</li>
+                <li><th:block th:replace="~{fragments/icons :: icon('heart')}"></th:block> Guidance for donors, never a replacement for medical advice</li>
+            </ul>
+        </div>
+    </section>
+    <main id="main" class="hl-auth-main" th:replace="${content}"></main>
+</div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+    Application layout for signed-in pages (Module 3.1): sidebar, top bar,
+    main content and a shared confirmation dialog.
+
+    Usage in a page template:
+      <html th:replace="~{layouts/app :: layout('My Requests', 'my-requests', ~{::main})}">
+      <body><main> ...page content... </main></body></html>
+-->
+<html lang="en" th:fragment="layout(title, activePage, content)" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${title})}"></head>
+<body class="hl-app">
+<a class="hl-skip-link" href="#main">Skip to main content</a>
+<div class="app-shell">
+    <div id="hlSidebarOverlay" class="hl-overlay" aria-hidden="true"></div>
+    <aside th:replace="~{fragments/sidebar :: sidebar(${activePage})}"></aside>
+    <div class="hl-main">
+        <header th:replace="~{fragments/topbar :: topbar}"></header>
+        <main id="main" class="hl-page-content" th:replace="${content}"></main>
+    </div>
+</div>
+
+<!-- Shared confirmation dialog, opened by forms with data-confirm="...". -->
+<dialog id="hlConfirmDialog" class="hl-dialog" aria-labelledby="hlConfirmTitle">
+    <form method="dialog" class="hl-dialog-body">
+        <h2 id="hlConfirmTitle" class="hl-dialog-title">Please confirm</h2>
+        <p id="hlConfirmMessage" class="muted">Are you sure?</p>
+        <div class="hl-dialog-actions">
+            <button class="hl-button hl-button-secondary" value="cancel" type="submit">Cancel</button>
+            <button class="hl-button hl-button-danger" value="confirm" type="submit" id="hlConfirmOk">Confirm</button>
+        </div>
+    </form>
+</dialog>
+
+
+</body>
+</html>

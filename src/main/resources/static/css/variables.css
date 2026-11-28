@@ -24,4 +24,12 @@
     --hl-radius-md: 12px;
     --hl-sidebar-width: 260px;
     --hl-topbar-height: 72px;
+
+    /* Module 3.1 additions (from the design reference) */
+    --hl-red-700: #b42332;
+    --hl-amber-700: #995b00;
+    --hl-text-secondary: #52677a;
+    --hl-chart-requests: #0b5d4f;
+    --hl-chart-matches: #4fd1a5;
+    --hl-focus: 0 0 0 3px rgba(0, 155, 112, .28);
 }

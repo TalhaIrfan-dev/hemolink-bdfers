@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+    Request Detail (Module 3.4, FR-08/FR-09). Requester's own request only:
+    no donor identity, no health data, no administrator identity.
+-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layouts/app :: layout(${@display.requestId(detail.requestId)}, 'my-requests', ~{::main})}">
+<body>
+<main id="main" class="hl-page-content">
+
+    <ol class="hl-breadcrumbs" aria-label="Breadcrumb">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/requests}">My Requests</a></li>
+        <li aria-current="page" th:text="${@display.requestId(detail.requestId)}">REQ-0001</li>
+    </ol>
+
+    <div class="hl-page-heading">
+        <div>
+            <h1 class="hl-title-row">
+                <span th:text="${@display.requestId(detail.requestId)}">REQ-0001</span>
+                <span class="hl-pill" th:classappend="${detail.critical} ? 'hl-pill--critical' : 'hl-pill--normal'">
+                    <th:block th:if="${detail.critical}"><th:block th:replace="~{fragments/icons :: icon('bolt')}"></th:block></th:block>
+                    <span th:text="${detail.urgencyLabel}">Critical</span>
+                </span>
+                <span class="hl-pill" th:classappend="${@display.stageClass(detail.stage)}"
+                      th:text="${@display.stageLabel(detail.stage)}">Matching</span>
+            </h1>
+            <p>
+                <span class="hl-blood" th:text="${detail.bloodGroupLabel}">A+</span>
+                <span th:text="${detail.hospitalName + ', ' + detail.city}">Hospital, City</span>
+            </p>
+        </div>
+        <div class="hl-page-heading-actions">
+            <a class="hl-button" th:href="@{/requests/{id}/matches(id=${detail.requestId})}">
+                <th:block th:replace="~{fragments/icons :: icon('users')}"></th:block>Matching Results
+            </a>
+            <a class="hl-button hl-button-secondary" th:if="${detail.contactsSharedCount > 0}"
+               th:href="@{/requests/{id}/matches/contacts(id=${detail.requestId})}">
+                <th:block th:replace="~{fragments/icons :: icon('phone')}"></th:block>Donor Contacts
+            </a>
+        </div>
+    </div>
+
+    <th:block th:replace="~{fragments/ui :: alerts}"></th:block>
+
+    <div class="hl-alert hl-alert-error" role="alert"
+         th:if="${detail.adminStatusName == 'REJECTED' and detail.rejectionReason != null}">
+        <th:block th:replace="~{fragments/icons :: icon('x-circle')}"></th:block>
+        <span th:text="${'An administrator rejected this request. Reason: ' + detail.rejectionReason}">Rejected.</span>
+    </div>
+    <div class="hl-alert hl-alert-info" role="status"
+         th:if="${detail.adminStatusName == 'CLOSED' and detail.closeReason != null}">
+        <th:block th:replace="~{fragments/icons :: icon('info')}"></th:block>
+        <span th:text="${'This request was closed. Reason: ' + detail.closeReason}">Closed.</span>
+    </div>
+    <div class="hl-alert hl-alert-warning" role="status"
+         th:if="${detail.stage != null and detail.stage.name() == 'AWAITING_APPROVAL'}">
+        <th:block th:replace="~{fragments/icons :: icon('hourglass')}"></th:block>
+        <span>Normal requests are reviewed by an administrator before matching starts. You will be notified when it is approved.</span>
+    </div>
+
+    <div class="hl-dashboard-grid">
+
+        <section class="hl-card" aria-labelledby="summaryTitle">
+            <div class="hl-card-header">
+                <h2 id="summaryTitle" class="hl-card-title">Request summary</h2>
+            </div>
+
+            <dl class="hl-detail-grid">
+                <div><dt>Blood group</dt><dd th:text="${detail.bloodGroupLabel}">A+</dd></div>
+                <div><dt>Units required</dt><dd th:text="${detail.unitsRequired}">2</dd></div>
+                <div><dt>City</dt><dd th:text="${detail.city}">City</dd></div>
+                <div><dt>Hospital</dt><dd th:text="${detail.hospitalName}">Hospital</dd></div>
+                <div><dt>Needed by</dt><dd th:text="${@display.dateTime(detail.requiredAt)}">28 Nov 2026, 14:30</dd></div>
+                <div><dt>Matching</dt><dd th:text="${detail.matchingStatusLabel}">Matches found</dd></div>
+            </dl>
+
+            <div class="hl-progress-block">
+                <div class="hl-progress-head">
+                    <strong>Units donated</strong>
+                    <span th:text="${detail.fulfilledUnits + ' of ' + detail.unitsRequired}">0 of 2</span>
+                </div>
+                <div class="hl-progress" role="progressbar" aria-label="Units donated"
+                     th:attr="aria-valuenow=${detail.progressPercent}" aria-valuemin="0" aria-valuemax="100">
+                    <span th:style="${'width:' + detail.progressPercent + '%'}"></span>
+                </div>
+            </div>
+
+            <ul class="hl-mini-stats" aria-label="Donor replies">
+                <li><strong th:text="${detail.totalMatches}">0</strong><span>Potential donors</span></li>
+                <li><strong th:text="${detail.acceptedCount}">0</strong><span>Accepted</span></li>
+                <li><strong th:text="${detail.contactsSharedCount}">0</strong><span>Contacts shared</span></li>
+            </ul>
+        </section>
+
+        <section class="hl-card" aria-labelledby="timelineTitle">
+            <div class="hl-card-header">
+                <h2 id="timelineTitle" class="hl-card-title">
+                    <th:block th:replace="~{fragments/icons :: icon('activity')}"></th:block>Timeline
+                </h2>
+            </div>
+            <ol class="hl-timeline">
+                <li class="hl-timeline-item" th:each="step : ${detail.timeline}"
+                    th:classappend="${step.stateName == 'pending'} ? 'is-pending' : (${step.stateName == 'current'} ? 'is-warning' : '')">
+                    <span class="hl-timeline-icon">
+                        <th:block th:if="${step.stateName == 'done'}"><th:block th:replace="~{fragments/icons :: icon('check')}"></th:block></th:block>
+                        <th:block th:unless="${step.stateName == 'done'}"><th:block th:replace="~{fragments/icons :: icon('clock')}"></th:block></th:block>
+                    </span>
+                    <div>
+                        <div class="hl-timeline-title" th:text="${step.title}">Step</div>
+                        <div class="hl-timeline-detail" th:if="${step.detail != null}" th:text="${step.detail}">Detail</div>
+                        <div class="hl-timeline-time" th:if="${step.time != null}" th:text="${@display.dateTime(step.time)}">26 Nov 2026, 10:00</div>
+                        <div class="hl-timeline-time" th:if="${step.time == null and step.stateName == 'current'}">In progress</div>
+                    </div>
+                </li>
+            </ol>
+        </section>
+    </div>
+
+    <!-- Close / cancel (D-13); the server checks the transition again. -->
+    <section class="hl-card hl-danger-zone" th:if="${detail.closable}" aria-labelledby="closeTitle">
+        <div class="hl-card-header">
+            <h2 id="closeTitle" class="hl-card-title">Close this request</h2>
+        </div>
+        <p class="muted">
+            Close the request if you no longer need blood, for example because it was arranged elsewhere.
+            Donors can no longer respond, and shared donor contact details are hidden.
+        </p>
+        <form th:action="@{/requests/{id}/close(id=${detail.requestId})}" method="post" class="hl-close-form"
+              data-confirm="Close this blood request? Donors will no longer be able to respond."
+              data-confirm-button="Close request">
+            <div class="hl-field">
+                <label for="reason">Reason (optional)</label>
+                <textarea id="reason" name="reason" class="hl-textarea" maxlength="255" rows="2"
+                          placeholder="For example: blood arranged through the hospital"></textarea>
+            </div>
+            <div>
+                <button class="hl-button hl-button-danger" type="submit">
+                    <th:block th:replace="~{fragments/icons :: icon('x-circle')}"></th:block>Close request
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>
