@@ -46,11 +46,11 @@ public class DonorProfileController {
         model.addAttribute("profileRequest", request);
         model.addAttribute("profileExists", profile != null);
 
-        model.addAttribute("eligibilityStatus",
-                profile != null ? profile.getEligibilityStatus() : null);
+        model.addAttribute("advice",
+                donorProfileService.getProfileAdvice(userDetails.getUsername()));
 
-        model.addAttribute("eligibilityReason",
-                profile != null ? profile.getEligibilityReason() : null);
+        model.addAttribute("deactivationNotice",
+                donorProfileService.getDeactivationNotice(userDetails.getUsername()));
 
         addFormOptions(model);
 
@@ -72,11 +72,11 @@ public class DonorProfileController {
 
             model.addAttribute("profileExists", profile != null);
 
-            model.addAttribute("eligibilityStatus",
-                    profile != null ? profile.getEligibilityStatus() : null);
+            model.addAttribute("advice",
+                    donorProfileService.getProfileAdvice(userDetails.getUsername()));
 
-            model.addAttribute("eligibilityReason",
-                    profile != null ? profile.getEligibilityReason() : null);
+            model.addAttribute("deactivationNotice",
+                    donorProfileService.getDeactivationNotice(userDetails.getUsername()));
 
             addFormOptions(model);
 
@@ -102,16 +102,36 @@ public class DonorProfileController {
 
             model.addAttribute("profileExists", profile != null);
 
-            model.addAttribute("eligibilityStatus",
-                    profile != null ? profile.getEligibilityStatus() : null);
+            model.addAttribute("advice",
+                    donorProfileService.getProfileAdvice(userDetails.getUsername()));
 
-            model.addAttribute("eligibilityReason",
-                    profile != null ? profile.getEligibilityReason() : null);
+            model.addAttribute("deactivationNotice",
+                    donorProfileService.getDeactivationNotice(userDetails.getUsername()));
 
             addFormOptions(model);
 
             return "donor/profile";
         }
+    }
+
+    /** Quick Available/Unavailable switch on the dashboard (FR-05). */
+    @PostMapping("/availability")
+    public String setAvailability(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam AvailabilityStatus availability,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            donorProfileService.setAvailability(userDetails.getUsername(), availability);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    availability == AvailabilityStatus.AVAILABLE
+                            ? "You are now available. You will be matched to compatible requests."
+                            : "You are now unavailable. You will not be matched to new requests.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "redirect:/dashboard";
     }
 
     private void addFormOptions(Model model) {

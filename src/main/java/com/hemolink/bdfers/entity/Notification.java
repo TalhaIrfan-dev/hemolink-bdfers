@@ -1,6 +1,7 @@
 
 package com.hemolink.bdfers.entity;
 
+import com.hemolink.bdfers.enums.NotificationType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -20,6 +21,10 @@ public class Notification {
     @JoinColumn(name = "request_id")
     private BloodRequest bloodRequest;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationType type = NotificationType.GENERAL;
+
     @Column(nullable = false, length = 500)
     private String message;
 
@@ -32,6 +37,9 @@ public class Notification {
     public Long getId() { return id; }
     public AppUser getUser() { return user; }
     public BloodRequest getBloodRequest() { return bloodRequest; }
+    public NotificationType getType() { return type; }
+    public void setType(NotificationType type) { this.type = type; }
+
     public String getMessage() { return message; }
     public boolean isRead() { return read; }
     public LocalDateTime getCreatedAt() { return createdAt; }

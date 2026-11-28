@@ -46,6 +46,14 @@ public class DonorMatch {
     @Column(name = "approval_at")
     private LocalDateTime approvalAt;
 
+    /** When the match was created (set by the database). Used for dashboard trends. */
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     public Long getId() {
         return id;
     }

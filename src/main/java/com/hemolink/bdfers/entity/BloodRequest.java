@@ -52,8 +52,28 @@ public class BloodRequest {
     @Column(name = "matching_status", nullable = false)
     private MatchingStatus matchingStatus = MatchingStatus.NOT_STARTED;
 
-    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    @Column(name = "rejection_reason", length = 255)
     private String rejectionReason;
+
+    /** Administrator who approved or rejected the request (FR-16). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private AppUser reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    /** Why the request was closed (required for admins, optional for requesters). */
+    @Column(name = "close_reason", length = 255)
+    private String closeReason;
+
+    /** Requester or administrator who closed the request. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "closed_by")
+    private AppUser closedBy;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -164,4 +184,19 @@ public class BloodRequest {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+
+    public AppUser getReviewedBy() { return reviewedBy; }
+    public void setReviewedBy(AppUser reviewedBy) { this.reviewedBy = reviewedBy; }
+
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
+
+    public String getCloseReason() { return closeReason; }
+    public void setCloseReason(String closeReason) { this.closeReason = closeReason; }
+
+    public AppUser getClosedBy() { return closedBy; }
+    public void setClosedBy(AppUser closedBy) { this.closedBy = closedBy; }
+
+    public LocalDateTime getClosedAt() { return closedAt; }
+    public void setClosedAt(LocalDateTime closedAt) { this.closedAt = closedAt; }
 }
