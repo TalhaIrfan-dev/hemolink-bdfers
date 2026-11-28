@@ -51,22 +51,40 @@
         </th:block>
 
         <ul class="hl-notification-list" th:unless="${notifications.empty}">
-            <li th:each="n : ${notifications.content}" th:classappend="${!n.read} ? 'is-unread'">
+            <li th:each="n : ${notifications.content}"
+                th:classappend="${!n.read} ? 'is-unread'">
+
                 <form th:action="@{/notifications/{id}/open(id=${n.id})}" method="post">
-                    <button type="submit" class="hl-notification">
-                        <span class="hl-notification-icon" th:classappend="${@display.notificationTone(n.type)}">
-                            <th:block th:replace="~{fragments/icons :: icon(${@display.notificationIcon(n.type)})}"></th:block>
+                    <button type="submit"
+                            class="hl-notification"
+                            th:with="iconName=${@display.notificationIcon(n.type)}">
+
+                        <span class="hl-notification-icon"
+                            th:classappend="${@display.notificationTone(n.type)}">
+
+                            <th:block th:replace="~{fragments/icons :: icon(${iconName})}"></th:block>
                         </span>
+
                         <span class="hl-notification-body">
                             <span class="hl-notification-type">
                                 <span th:text="${n.typeLabel}">Type</span>
                                 <span class="hl-new-badge" th:unless="${n.read}">New</span>
                             </span>
-                            <span class="hl-notification-message" th:text="${n.message}">Message</span>
-                            <span class="hl-notification-time" th:attr="title=${@display.dateTime(n.createdAt)}"
-                                  th:text="${@display.relative(n.createdAt)}">10 minutes ago</span>
+
+                            <span class="hl-notification-message"
+                                th:text="${n.message}">Message</span>
+
+                            <span class="hl-notification-time"
+                                th:attr="title=${@display.dateTime(n.createdAt)}"
+                                th:text="${@display.relative(n.createdAt)}">
+                                10 minutes ago
+                            </span>
                         </span>
-                        <span class="hl-notification-go" aria-hidden="true"><th:block th:replace="~{fragments/icons :: icon('chevron-right')}"></th:block></span>
+
+                        <span class="hl-notification-go" aria-hidden="true">
+                            <th:block th:replace="~{fragments/icons :: icon('chevron-right')}"></th:block>
+                        </span>
+
                     </button>
                 </form>
             </li>
