@@ -82,8 +82,9 @@
                             <div class="hl-units">
                                 <span th:text="${done + ' of ' + r.unitsRequired}">0 of 2</span>
                                 <div class="hl-progress hl-progress--sm" role="progressbar"
-                                     th:attr="aria-valuenow=${pct},aria-label=${'Units donated for ' + @display.requestId(r.id)}"
-                                     aria-valuemin="0" aria-valuemax="100">
+                                    th:attr="aria-valuenow=${pct}"
+                                    aria-label="Units donated progress"
+                                    aria-valuemin="0" aria-valuemax="100">
                                     <span th:style="${'width:' + pct + '%'}"></span>
                                 </div>
                             </div>
@@ -99,9 +100,9 @@
                             <div class="hl-table-actions">
                                 <a class="hl-button hl-button-secondary hl-button-sm"
                                    th:href="@{/requests/{id}/matches(id=${r.id})}"
-                                   th:attr="aria-label=${'Matching results for ' + @display.requestId(r.id)}">Donors</a>
+                                   th:attr="aria-label=${'Matching results for request ' + r.id}">Donors</a>
                                 <a class="hl-icon-button" th:href="@{/requests/{id}(id=${r.id})}"
-                                   th:attr="aria-label=${'Open ' + @display.requestId(r.id)}">
+                                   th:attr="aria-label=${'Open request ' + r.id}">
                                     <th:block th:replace="~{fragments/icons :: icon('arrow-right')}"></th:block>
                                 </a>
                             </div>

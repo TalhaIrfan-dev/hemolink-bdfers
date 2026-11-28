@@ -4,7 +4,7 @@
     no donor identity, no health data, no administrator identity.
 -->
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layouts/app :: layout(${@display.requestId(detail.requestId)}, 'my-requests', ~{::main})}">
+      th:replace="~{layouts/app :: layout('Request Details', 'my-requests', ~{::main})}">
 <body>
 <main id="main" class="hl-page-content">
 
